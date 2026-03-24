@@ -217,7 +217,7 @@ function TicketsContent() {
                     {/* ID */}
                     <div className="py-2.5 px-3 flex items-center gap-1.5 min-w-0">
                       <span className="font-mono text-xs text-slate-500 dark:text-slate-400 truncate">{t.id}</span>
-                      {t.attachment && <Paperclip className="w-3 h-3 text-slate-300 dark:text-slate-600 shrink-0" />}
+                      {t.attachment && <Paperclip className="w-3 h-3 cursor-pointer text-slate-300 dark:text-slate-600 shrink-0" />}
                     </div>
 
                     {/* Nature / User */}

@@ -1,5 +1,4 @@
 "use client";
-
 import Link from "next/link";
 import {
   Ticket, CheckCircle, Clock, Users, Star, Trash2, Inbox,
@@ -55,7 +54,7 @@ function GreetingBanner({ unassigned, high }: { unassigned: number; high: number
       : "All tickets are assigned and on track.";
 
   return (
-    <div className="relative overflow-hidden bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700/60 rounded-xl px-6 py-4">
+    <div className="relative overflow-hidden bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded-xl px-6 py-4">
       <div className="absolute left-0 inset-y-0 w-1 bg-indigo-400/70 dark:bg-indigo-500/60 rounded-l-xl" />
       <div className="relative flex items-center justify-between gap-4">
         <div>
@@ -223,7 +222,12 @@ export default function DashboardPage() {
     .slice(0, 5);
 
   return (
-    <div className="space-y-6">
+    <div 
+    style={{
+      backgroundImage: "radial-gradient(rgba(99,102,241,0.6) 1px, transparent 1px)",
+      backgroundSize: "20px 20px",
+    }}
+    className="space-y-6">
       {/* Time-aware greeting */}
       <GreetingBanner unassigned={counts.unassigned} high={counts.high} />
 
@@ -238,7 +242,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Priority & Status Strip */}
-      <div className="flex items-center gap-5 px-1 flex-wrap">
+      <div className="flex items-center justify-center gap-5 px-1 flex-wrap w-full border-slate-200 dark:border-slate-700 p-2 rounded-lg bg-white dark:bg-slate-800">
         <span
         style={{
           fontFamily: "Jost"
