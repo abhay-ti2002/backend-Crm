@@ -16,7 +16,7 @@ export class OrdersController {
 
     return this.ordersService.create({
       ...dto,
-      customerId: user._id, // ✅ auto from JWT
+      customerId: user._id, //
     });
   }
 
