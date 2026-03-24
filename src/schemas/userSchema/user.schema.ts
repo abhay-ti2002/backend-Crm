@@ -1,4 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Types } from 'mongoose';
 import { HydratedDocument } from 'mongoose';
 import * as bcrypt from 'bcrypt';
 
@@ -16,6 +17,8 @@ export type UserDocument = HydratedDocument<User, UserMethods>;
 
 @Schema({ timestamps: true })
 export class User {
+  _id: Types.ObjectId;
+
   @Prop({ required: true })
   name: string;
 
