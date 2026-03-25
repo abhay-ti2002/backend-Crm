@@ -37,6 +37,9 @@ export class User {
     default: UserRole.CUSTOMER,
   })
   role: UserRole;
+
+  @Prop({ type: String })
+  sector: string;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

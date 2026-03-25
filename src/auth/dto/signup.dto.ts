@@ -2,5 +2,5 @@ export class SignupDto {
   name: string;
   email: string;
   password: string;
-  role?: string; // optional
+  role?: string;
 }
