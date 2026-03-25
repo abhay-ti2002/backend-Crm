@@ -184,12 +184,20 @@ export class TicketsService {
     async findAll(user: any): Promise<Ticket[]> {
         const query: any = {};
 
+        console.log('FinalAll Request for User:', {
+            id: user.id || user._id,
+            role: user.role,
+        });
+
+        const currentUserId = user.id || user._id;
+
         if (user.role === UserRole.CUSTOMER) {
-            query.createdBy = user.id;
+            query.createdBy = new Types.ObjectId(currentUserId);
         } else if (user.role === UserRole.AGENT) {
-            query.assignedTo = user.id;
+            query.assignedTo = new Types.ObjectId(currentUserId);
         }
-        // ADMIN sees all
+
+        console.log('Mongoose Final Query:', query);
 
         return this.ticketModel.find(query)
             .populate('createdBy', 'name email')
