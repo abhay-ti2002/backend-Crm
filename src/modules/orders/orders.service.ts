@@ -51,7 +51,7 @@ export class OrdersService {
 
     const savedOrder = await order.save();
 
-    // 🔥 Update items
+    // Update items
     await this.itemModel.updateMany(
       { _id: { $in: dto.items } },
       {
