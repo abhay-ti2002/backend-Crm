@@ -19,6 +19,7 @@ export class MailingService {
     }
 
     async sendEmail(to: string, subject: string, text: string, html?: string) {
+        this.logger.log(`Attempting to send email to: ${to} | Subject: ${subject}`);
         try {
             const info = await this.transporter.sendMail({
                 from: '"Ticket CRM" <no-reply@ticketcrm.com>',
@@ -27,10 +28,10 @@ export class MailingService {
                 text,
                 html,
             });
-            this.logger.log(`Email sent: ${info.messageId}`);
+            this.logger.log(`SUCCESS: Email sent to ${to}. MessageId: ${info.messageId}`);
             return info;
         } catch (error) {
-            this.logger.error(`Error sending email: ${error.message}`);
+            this.logger.error(`FAILURE: Could not send email to ${to}. Error: ${error.message}`);
         }
     }
 }

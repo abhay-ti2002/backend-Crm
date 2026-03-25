@@ -91,7 +91,7 @@ export class AuthService {
   //  JWT Token
   private generateToken(user: UserDocument) {
     const payload = {
-      sub: user._id,
+      sub: user._id.toString(),
       email: user.email,
       role: user.role,
     };
@@ -99,7 +99,7 @@ export class AuthService {
     return {
       access_token: this.jwtService.sign(payload),
       user: {
-        id: user._id,
+        id: user._id.toString(),
         email: user.email,
         role: user.role,
       },
