@@ -1,5 +1,3 @@
-// src/modules/products/products.service.ts
-
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
@@ -26,5 +24,19 @@ export class ProductsService {
     const product = await this.productModel.create(dto);
 
     return product;
+  }
+
+  async getAllProducts() {
+    return this.productModel.find();
+  }
+
+  async getProductById(id: string) {
+    return this.productModel.findById(id);
+  }
+
+  async updateProduct(id: string, dto: any) {
+    return this.productModel.findByIdAndUpdate(id, dto, {
+      new: true,
+    });
   }
 }
