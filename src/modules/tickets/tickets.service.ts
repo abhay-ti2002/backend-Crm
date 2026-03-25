@@ -19,13 +19,15 @@ export class TicketsService {
     ) { }
 
     async create(createTicketDto: CreateTicketDto, userId: string): Promise<Ticket> {
-        // Validate orderId and productId if provided
+        // Validate orderId and itemId if provided
         if (createTicketDto.orderId && !Types.ObjectId.isValid(createTicketDto.orderId)) {
             throw new BadRequestException(`Invalid orderId: ${createTicketDto.orderId}`);
         }
-        if (createTicketDto.productId && !Types.ObjectId.isValid(createTicketDto.productId)) {
-            throw new BadRequestException(`Invalid productId: ${createTicketDto.productId}`);
+        if (createTicketDto.itemId && !Types.ObjectId.isValid(createTicketDto.itemId)) {
+            throw new BadRequestException(`Invalid itemId: ${createTicketDto.itemId}`);
         }
+
+        const historyMessage = `Ticket Created${createTicketDto.itemId ? ` for Item: ${createTicketDto.itemId}` : ''}${createTicketDto.orderId ? ` (Order: ${createTicketDto.orderId})` : ''}`;
 
         const newTicket = new this.ticketModel({
             ...createTicketDto,
@@ -33,7 +35,7 @@ export class TicketsService {
             status: TicketStatus.NEW,
             history: [
                 {
-                    action: 'Ticket Created',
+                    action: historyMessage,
                     performedBy: new Types.ObjectId(userId),
                     timestamp: new Date(),
                 },
@@ -45,7 +47,7 @@ export class TicketsService {
         return (await this.ticketModel.findById(savedTicket._id)
             .populate('assignedTo', 'name email')
             .populate('orderId')
-            .populate('productId')
+            .populate('itemId')
             .exec())!;
     }
 
@@ -183,7 +185,7 @@ export class TicketsService {
             .populate('createdBy', 'name email')
             .populate('assignedTo', 'name email')
             .populate('orderId')
-            .populate('productId')
+            .populate('itemId')
             .exec();
 
         if (!ticket) throw new NotFoundException('Ticket not found');
@@ -226,7 +228,7 @@ export class TicketsService {
                     .populate('createdBy', 'name email')
                     .populate('assignedTo', 'name email')
                     .populate('orderId')
-                    .populate('productId')
+                    .populate('itemId')
                     .exec();
             } catch (popError) {
                 this.logger.warn(`Population failed in findAll: ${popError.message}. Falling back to unpopulated list.`);
@@ -247,7 +249,7 @@ export class TicketsService {
                 .populate('createdBy', 'name email')
                 .populate('assignedTo', 'name email')
                 .populate('orderId')
-                .populate('productId')
+                .populate('itemId')
                 .sort({ updatedAt: -1 })
                 .exec();
         } catch (popError) {

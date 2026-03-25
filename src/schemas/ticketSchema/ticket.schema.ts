@@ -55,10 +55,10 @@ export class Ticket {
     createdBy: Types.ObjectId;
 
     @Prop({ type: Types.ObjectId, ref: 'Order' })
-    orderId: Types.ObjectId;
+    orderId?: Types.ObjectId;
 
-    @Prop({ type: Types.ObjectId, ref: 'Product' })
-    productId: Types.ObjectId;
+    @Prop({ type: Types.ObjectId, ref: 'Item' })
+    itemId?: Types.ObjectId;
 
     @Prop({ type: [HistoryLog], default: [] })
     history: HistoryLog[];

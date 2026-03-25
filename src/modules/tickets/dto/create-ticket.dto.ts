@@ -3,5 +3,5 @@ export class CreateTicketDto {
     description: string;
     sector: string;
     orderId?: string;
-    productId?: string;
+    itemId?: string;
 }
