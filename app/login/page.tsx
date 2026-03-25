@@ -10,6 +10,7 @@ import { useUserSessionStore } from "@/stores/userSessionStore";
 import { adminCredentials, users } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { login as loginApi } from "@/lib/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -18,71 +19,66 @@ export default function LoginPage() {
   const { login: adminLogin } = useAdminSessionStore();
   const { setCurrentUser } = useUserSessionStore();
 
-  const [email,    setEmail]    = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
-  const [error,    setError]    = useState("");
-  const [loading,  setLoading]  = useState(false);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
-    const trimmedEmail = email.trim().toLowerCase();
+    try {
+      const res = await loginApi({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      //  console.log(res);
 
-    // Check admin credentials first
-    if (
-      trimmedEmail === adminCredentials.email.toLowerCase() &&
-      password === adminCredentials.password
-    ) {
-      adminLogin();
-      router.push("/admin");
-      return;
+      // If using JWT (localStorage)
+      localStorage.setItem("token", res.access_token);
+
+      //  Store user in Zustand (optional)
+      if (res.user?.role === "admin") {
+        adminLogin();
+        router.push("/admin");
+      } else if (res.user?.role === "agent") {
+        setCurrentAgent(res.user.id);
+        router.push("/agent/dashboard");
+      } else {
+        setCurrentUser(res.user?.id);
+        router.push("/user");
+      }
+      //eslint-disable-line
+    } catch (err: any) {
+      setError(err.message || "Login failed");
+    } finally {
+      setLoading(false);
     }
-
-    // Check agent credentials
-    const agent = agents.find(
-      (a) => a.email.toLowerCase() === trimmedEmail && a.password === password
-    );
-
-    if (agent) {
-      setOnlineOnLogin(agent.id);
-      setCurrentAgent(agent.id);
-      router.push("/agent/dashboard");
-      return;
-    }
-
-    // Check user (customer) credentials
-    const user = users.find(
-      (u) => u.email.toLowerCase() === trimmedEmail && u.password === password
-    );
-
-    if (user) {
-      setCurrentUser(user.id);
-      router.push("/user");
-      return;
-    }
-
-    setLoading(false);
-    setError("Invalid email or password.");
   };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
-
         {/* Logo */}
         <div className="flex items-center justify-center gap-2.5 mb-8">
           <TicketCheck className="w-6 h-6 text-indigo-500" />
-          <span className="font-heading font-bold text-slate-900 dark:text-white text-2xl tracking-tight">TICKR</span>
+          <span className="font-heading font-bold text-slate-900 dark:text-white text-2xl tracking-tight">
+            TICKR
+          </span>
         </div>
 
         {/* Card */}
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-700/60 shadow-sm overflow-hidden">
           <div className="px-6 pt-6 pb-2">
-            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">Sign in</h1>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Enter your credentials to continue</p>
+            <h1 className="text-lg font-bold text-slate-900 dark:text-white tracking-tight">
+              Sign in
+            </h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+              Enter your credentials to continue
+            </p>
           </div>
 
           <form onSubmit={handleSubmit} className="px-6 pb-6 pt-4 space-y-4">
@@ -94,7 +90,10 @@ export default function LoginPage() {
               <input
                 type="email"
                 value={email}
-                onChange={(e) => { setEmail(e.target.value); setError(""); }}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setError("");
+                }}
                 placeholder="you@crm.io"
                 autoComplete="email"
                 required
@@ -105,7 +104,7 @@ export default function LoginPage() {
                   "transition-colors duration-150",
                   error
                     ? "border-red-400 dark:border-red-500"
-                    : "border-slate-200 dark:border-slate-700"
+                    : "border-slate-200 dark:border-slate-700",
                 )}
               />
             </div>
@@ -119,7 +118,10 @@ export default function LoginPage() {
                 <input
                   type={showPass ? "text" : "password"}
                   value={password}
-                  onChange={(e) => { setPassword(e.target.value); setError(""); }}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setError("");
+                  }}
                   placeholder="••••••••"
                   autoComplete="current-password"
                   required
@@ -130,7 +132,7 @@ export default function LoginPage() {
                     "transition-colors duration-150",
                     error
                       ? "border-red-400 dark:border-red-500"
-                      : "border-slate-200 dark:border-slate-700"
+                      : "border-slate-200 dark:border-slate-700",
                   )}
                 />
                 <button
@@ -139,7 +141,11 @@ export default function LoginPage() {
                   tabIndex={-1}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
                 >
-                  {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  {showPass ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -164,32 +170,73 @@ export default function LoginPage() {
 
         {/* Demo credentials */}
         <div className="mt-4 rounded-xl border border-slate-200 dark:border-slate-700/60 bg-white dark:bg-slate-900 px-4 py-3 space-y-3">
-          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">Demo credentials</p>
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+            Demo credentials
+          </p>
           <div>
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Admin</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+              Admin
+            </p>
             <div className="space-y-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
-              <p><span className="text-slate-700 dark:text-slate-300">email    </span> admin@crm.io</p>
-              <p><span className="text-slate-700 dark:text-slate-300">password </span> admin123</p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  email{" "}
+                </span>{" "}
+                admin@crm.io
+              </p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  password{" "}
+                </span>{" "}
+                admin123
+              </p>
             </div>
           </div>
           <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">Agent</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+              Agent
+            </p>
             <div className="space-y-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
-              <p><span className="text-slate-700 dark:text-slate-300">email    </span> karan@crm.io</p>
-              <p><span className="text-slate-700 dark:text-slate-300">password </span> agent123</p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  email{" "}
+                </span>{" "}
+                karan@crm.io
+              </p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  password{" "}
+                </span>{" "}
+                agent123
+              </p>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">All agents share the same password.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">
+              All agents share the same password.
+            </p>
           </div>
           <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
-            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">User</p>
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">
+              User
+            </p>
             <div className="space-y-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
-              <p><span className="text-slate-700 dark:text-slate-300">email    </span> jass@user.io</p>
-              <p><span className="text-slate-700 dark:text-slate-300">password </span> user123</p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  email{" "}
+                </span>{" "}
+                jass@user.io
+              </p>
+              <p>
+                <span className="text-slate-700 dark:text-slate-300">
+                  password{" "}
+                </span>{" "}
+                user123
+              </p>
             </div>
-            <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">All users share the same password.</p>
+            <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">
+              All users share the same password.
+            </p>
           </div>
         </div>
-
       </div>
     </div>
   );
