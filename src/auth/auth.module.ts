@@ -4,8 +4,10 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PassportModule } from '@nestjs/passport';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
+import { AdminController } from './admin.controller';
 import { User, UserSchema } from '../schemas/userSchema/user.schema';
 import { JwtStrategy } from './jwt.strategy';
+import { TicketsModule } from '../modules/tickets/tickets.module';
 
 @Module({
   imports: [
@@ -15,9 +17,10 @@ import { JwtStrategy } from './jwt.strategy';
       secret: 'SECRET_KEY',
       signOptions: { expiresIn: '1d' },
     }),
+    TicketsModule,
   ],
   providers: [AuthService, JwtStrategy],
-  controllers: [AuthController],
+  controllers: [AuthController, AdminController],
   exports: [AuthService, JwtModule, PassportModule],
 })
-export class AuthModule {}
+export class AuthModule { }
