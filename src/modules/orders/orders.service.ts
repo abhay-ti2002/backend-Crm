@@ -21,7 +21,10 @@ export class OrdersService {
 
   // CREATE ORDER
   async create(dto: CreateOrderDto & { customerId: string }) {
-    // 🔥 Validate items
+    if (!Types.ObjectId.isValid(dto.customerId)) {
+      throw new BadRequestException('Invalid customerId');
+    }
+    //  Validate items
     const items = await this.itemModel.find({
       _id: { $in: dto.items },
     });
@@ -30,13 +33,13 @@ export class OrdersService {
       throw new NotFoundException('Some items not found');
     }
 
-    // 🔥 Check if already sold
+    // Check if already sold
     const alreadySold = items.find((i) => i.status === 'sold');
     if (alreadySold) {
       throw new BadRequestException('Item already sold');
     }
 
-    // 🔥 Create order
+    //  Create order
     const order = new this.orderModel({
       customerId: new Types.ObjectId(dto.customerId),
       items: dto.items,
