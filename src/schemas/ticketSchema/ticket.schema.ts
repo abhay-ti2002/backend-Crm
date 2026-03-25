@@ -54,6 +54,12 @@ export class Ticket {
     @Prop({ type: Types.ObjectId, ref: 'User', required: true })
     createdBy: Types.ObjectId;
 
+    @Prop({ type: Types.ObjectId, ref: 'Order' })
+    orderId: Types.ObjectId;
+
+    @Prop({ type: Types.ObjectId, ref: 'Product' })
+    productId: Types.ObjectId;
+
     @Prop({ type: [HistoryLog], default: [] })
     history: HistoryLog[];
 }
