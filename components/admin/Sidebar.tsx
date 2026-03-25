@@ -209,7 +209,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      {/* ── Footer: admin profile ────────────────────────────────────── */}
+      {/* ── Footer: admin profile ──────────────────────────────────── */}
       <div
         style={{ transitionTimingFunction: EASE }}
         className={cn(

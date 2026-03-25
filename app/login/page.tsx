@@ -6,7 +6,8 @@ import { TicketCheck, Eye, EyeOff } from "lucide-react";
 import { useAgentSessionStore } from "@/stores/agentSessionStore";
 import { useAgentStore } from "@/stores/agentStore";
 import { useAdminSessionStore } from "@/stores/adminSessionStore";
-import { adminCredentials } from "@/lib/mockData";
+import { useUserSessionStore } from "@/stores/userSessionStore";
+import { adminCredentials, users } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -15,6 +16,7 @@ export default function LoginPage() {
   const { agents, setOnlineOnLogin } = useAgentStore();
   const { setCurrentAgent } = useAgentSessionStore();
   const { login: adminLogin } = useAdminSessionStore();
+  const { setCurrentUser } = useUserSessionStore();
 
   const [email,    setEmail]    = useState("");
   const [password, setPassword] = useState("");
@@ -48,6 +50,17 @@ export default function LoginPage() {
       setOnlineOnLogin(agent.id);
       setCurrentAgent(agent.id);
       router.push("/agent/dashboard");
+      return;
+    }
+
+    // Check user (customer) credentials
+    const user = users.find(
+      (u) => u.email.toLowerCase() === trimmedEmail && u.password === password
+    );
+
+    if (user) {
+      setCurrentUser(user.id);
+      router.push("/user");
       return;
     }
 
@@ -166,6 +179,14 @@ export default function LoginPage() {
               <p><span className="text-slate-700 dark:text-slate-300">password </span> agent123</p>
             </div>
             <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">All agents share the same password.</p>
+          </div>
+          <div className="border-t border-slate-100 dark:border-slate-800 pt-3">
+            <p className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1">User</p>
+            <div className="space-y-0.5 text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <p><span className="text-slate-700 dark:text-slate-300">email    </span> jass@user.io</p>
+              <p><span className="text-slate-700 dark:text-slate-300">password </span> user123</p>
+            </div>
+            <p className="text-[10px] text-slate-400 dark:text-slate-600 mt-1.5">All users share the same password.</p>
           </div>
         </div>
 
