@@ -23,6 +23,12 @@ export class TicketsController {
         return this.ticketsService.create(createTicketDto, userId);
     }
 
+    @Get('history')
+    @Roles(UserRole.AGENT, UserRole.ADMIN)
+    async getHistory() {
+        return this.ticketsService.getHistory();
+    }
+
     @Get()
     async findAll(@Request() req) {
         return this.ticketsService.findAll(req.user);

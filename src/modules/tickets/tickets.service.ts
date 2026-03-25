@@ -19,6 +19,14 @@ export class TicketsService {
     ) { }
 
     async create(createTicketDto: CreateTicketDto, userId: string): Promise<Ticket> {
+        // Validate orderId and productId if provided
+        if (createTicketDto.orderId && !Types.ObjectId.isValid(createTicketDto.orderId)) {
+            throw new BadRequestException(`Invalid orderId: ${createTicketDto.orderId}`);
+        }
+        if (createTicketDto.productId && !Types.ObjectId.isValid(createTicketDto.productId)) {
+            throw new BadRequestException(`Invalid productId: ${createTicketDto.productId}`);
+        }
+
         const newTicket = new this.ticketModel({
             ...createTicketDto,
             createdBy: userId,
@@ -89,7 +97,7 @@ export class TicketsService {
             performedBy: new Types.ObjectId(userId),
             timestamp: new Date(),
         } as any);
- 
+
         const savedTicket = await ticket.save();
         await this.assignTicket(savedTicket);
         return (await this.ticketModel.findById(savedTicket._id)
@@ -194,26 +202,61 @@ export class TicketsService {
     async findAll(user: any): Promise<Ticket[]> {
         const query: any = {};
 
-        console.log('FinalAll Request for User:', {
-            id: user.id || user._id,
-            role: user.role,
-        });
+        this.logger.log(`findAll requested by: ${user.id} (Role: ${user.role})`);
 
         const currentUserId = user.id || user._id;
 
-        if (user.role === UserRole.CUSTOMER) {
-            query.createdBy = new Types.ObjectId(currentUserId);
-        } else if (user.role === UserRole.AGENT) {
-            query.assignedTo = new Types.ObjectId(currentUserId);
+        try {
+            if (user.role === UserRole.CUSTOMER) {
+                if (!Types.ObjectId.isValid(currentUserId)) {
+                    throw new BadRequestException(`Invalid User ID: ${currentUserId}`);
+                }
+                query.createdBy = new Types.ObjectId(currentUserId);
+            } else if (user.role === UserRole.AGENT) {
+                if (!Types.ObjectId.isValid(currentUserId)) {
+                    throw new BadRequestException(`Invalid Agent ID: ${currentUserId}`);
+                }
+                query.assignedTo = new Types.ObjectId(currentUserId);
+            }
+
+            this.logger.debug(`Mongoose Query: ${JSON.stringify(query)}`);
+
+            try {
+                return await this.ticketModel.find(query)
+                    .populate('createdBy', 'name email')
+                    .populate('assignedTo', 'name email')
+                    .populate('orderId')
+                    .populate('productId')
+                    .exec();
+            } catch (popError) {
+                this.logger.warn(`Population failed in findAll: ${popError.message}. Falling back to unpopulated list.`);
+                return await this.ticketModel.find(query)
+                    .populate('createdBy', 'name email')
+                    .populate('assignedTo', 'name email')
+                    .exec();
+            }
+        } catch (error) {
+            this.logger.error(`Error in findAll: ${error.message}`);
+            throw error;
         }
+    }
 
-        console.log('Mongoose Final Query:', query);
-
-        return this.ticketModel.find(query)
-            .populate('createdBy', 'name email')
-            .populate('assignedTo', 'name email')
-            .populate('orderId')
-            .populate('productId')
-            .exec();
+    async getHistory(): Promise<Ticket[]> {
+        try {
+            return await this.ticketModel.find()
+                .populate('createdBy', 'name email')
+                .populate('assignedTo', 'name email')
+                .populate('orderId')
+                .populate('productId')
+                .sort({ updatedAt: -1 })
+                .exec();
+        } catch (popError) {
+            this.logger.warn(`Population failed in getHistory: ${popError.message}. Falling back to unpopulated list.`);
+            return await this.ticketModel.find()
+                .populate('createdBy', 'name email')
+                .populate('assignedTo', 'name email')
+                .sort({ updatedAt: -1 })
+                .exec();
+        }
     }
 }
