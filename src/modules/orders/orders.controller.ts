@@ -6,6 +6,7 @@ import {
   Req,
   Get,
   Param,
+  BadRequestException,
 } from '@nestjs/common';
 
 import { OrdersService } from './orders.service';
@@ -20,11 +21,14 @@ export class OrdersController {
   //  CREATE ORDER
   @Post()
   create(@Req() req, @Body() dto: CreateOrderDto) {
-    const user = req.user;
+    const userId = req.user?._id || req.user?.id;
+    if (!userId) {
+      throw new BadRequestException('User not found in request');
+    }
 
     return this.ordersService.create({
       ...dto,
-      customerId: user._id,
+      customerId: userId,
     });
   }
 
