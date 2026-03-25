@@ -147,6 +147,12 @@
   }
 }
 
+/* ── Sidebar nav entrance ─────────────────────────────────────────────────── */
+@keyframes sidebar-nav-in {
+  from { opacity: 0; transform: translateX(-10px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
 /* Respect reduced-motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

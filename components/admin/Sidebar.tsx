@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard, Ticket, Users, Package, FileText, UserCog,
   PanelLeftClose, PanelRightClose, ChevronRight,
-  Star, Inbox, CircleDot, Trash2, Mail, TicketCheck,
+  Star, Inbox, CircleDot, Trash2, Mail, TicketCheck, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useTicketStore } from "@/stores/ticketStore";
+import { useAdminSessionStore } from "@/stores/adminSessionStore";
 import { Separator } from "@/components/ui/separator";
 
 const mainNav = [
@@ -18,7 +19,7 @@ const mainNav = [
   { href: "/admin/agents",   label: "Agents",     Icon: UserCog,         iconClass: "text-violet-400"  },
   { href: "/admin/products", label: "Products",   Icon: Package,         iconClass: "text-emerald-400" },
   { href: "/admin/logs",     label: "Logs",       Icon: FileText,        iconClass: "text-amber-400"   },
-  { href: "/admin/users",    label: "Users",      Icon: Users,           iconClass: "text-rose-400"    },
+  // { href: "/admin/users",    label: "Users",      Icon: Users,           iconClass: "text-rose-400"    },
 ];
 
 const labelItems = [
@@ -35,7 +36,14 @@ const EASE = "cubic-bezier(0.25, 1, 0.5, 1)";
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAdminSessionStore();
   const tickets = useTicketStore((s) => s.tickets);
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
   const counts = {
     new:        tickets.filter((t) => t.label === "New"        && !t.trashed).length,
     assigned:   tickets.filter((t) => t.label === "Assigned"   && !t.trashed).length,
@@ -207,33 +215,33 @@ export function Sidebar() {
         className={cn(
           "border-t border-white/10 shrink-0 transition-[padding] duration-300",
           collapsed ? "p-2" : "p-4"
-        )}
-      >
-        <div
+        )}>
+
+        {/* Sign out button */}
+        <button
+          onClick={handleLogout}
+          title={collapsed ? "Sign out" : undefined}
           className={cn(
-            "flex items-center",
-            collapsed ? "justify-center" : "gap-3"
+            "group w-full flex items-center rounded-lg text-sm font-medium",
+            "text-slate-400 hover:text-rose-400 hover:bg-white/5 active:scale-[0.97]",
+            "transition-[color,background-color,transform] duration-150",
+            collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2"
           )}
         >
-          <div
-            title={collapsed ? "Admin — admin@crm.io" : undefined}
-            className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-bold shrink-0"
-          >
-            AD
-          </div>
-
-          <div
+          <LogOut className={cn(
+            "w-4 h-4 shrink-0",
+            !collapsed && "transition-transform duration-150 group-hover:translate-x-0.5"
+          )} />
+          <span
             style={{ transitionTimingFunction: EASE }}
             className={cn(
-              "min-w-0 overflow-hidden",
-              "transition-[max-width,opacity] duration-280",
-              collapsed ? "max-w-0 opacity-0" : "max-w-35 opacity-100 flex-1"
+              "overflow-hidden whitespace-nowrap transition-[max-width,opacity] duration-280",
+              collapsed ? "max-w-0 opacity-0" : "max-w-40 opacity-100"
             )}
           >
-            <p className="text-sm font-medium text-white truncate">Admin</p>
-            <p className="text-xs text-slate-500 truncate">admin@crm.io</p>
-          </div>
-        </div>
+            Sign out
+          </span>
+        </button>
       </div>
     </aside>
   );
