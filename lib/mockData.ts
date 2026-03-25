@@ -104,6 +104,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
+  password: string;
   avatar: string;
   ticketCount: number;
   lastActive: string;
@@ -454,13 +455,13 @@ export const products: Product[] = [
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export const users: User[] = [
-  { id: "u1", name: "Jasskaran Singh", email: "jass@user.io", avatar: "JS", ticketCount: 2, lastActive: "2026-03-24T08:00:00Z" },
-  { id: "u2", name: "Anita Desai", email: "anita@user.io", avatar: "AD", ticketCount: 1, lastActive: "2026-03-22T10:00:00Z" },
-  { id: "u3", name: "Rohan Tiwari", email: "rohan@user.io", avatar: "RT", ticketCount: 1, lastActive: "2026-03-18T15:00:00Z" },
-  { id: "u4", name: "Sonal Mehta", email: "sonal@user.io", avatar: "SM", ticketCount: 1, lastActive: "2026-03-19T08:00:00Z" },
-  { id: "u5", name: "Deepak Kumar", email: "deepak@user.io", avatar: "DK", ticketCount: 1, lastActive: "2026-03-24T07:30:00Z" },
-  { id: "u6", name: "Kavya Reddy", email: "kavya@user.io", avatar: "KR", ticketCount: 1, lastActive: "2026-03-24T08:00:00Z" },
-  { id: "u7", name: "Farhan Sheikh", email: "farhan@user.io", avatar: "FS", ticketCount: 1, lastActive: "2026-03-23T09:30:00Z" },
-  { id: "u8", name: "Geeta Pillai", email: "geeta@user.io", avatar: "GP", ticketCount: 1, lastActive: "2026-03-15T08:30:00Z" },
-  { id: "u9", name: "Bhavna Choudhary", email: "bhavna@user.io", avatar: "BC", ticketCount: 1, lastActive: "2026-03-24T09:00:00Z" },
+  { id: "u1", name: "Jasskaran Singh",  email: "jass@user.io",   password: "user123", avatar: "JS", ticketCount: 2, lastActive: "2026-03-24T08:00:00Z" },
+  { id: "u2", name: "Anita Desai",      email: "anita@user.io",  password: "user123", avatar: "AD", ticketCount: 1, lastActive: "2026-03-22T10:00:00Z" },
+  { id: "u3", name: "Rohan Tiwari",     email: "rohan@user.io",  password: "user123", avatar: "RT", ticketCount: 1, lastActive: "2026-03-18T15:00:00Z" },
+  { id: "u4", name: "Sonal Mehta",      email: "sonal@user.io",  password: "user123", avatar: "SM", ticketCount: 1, lastActive: "2026-03-19T08:00:00Z" },
+  { id: "u5", name: "Deepak Kumar",     email: "deepak@user.io", password: "user123", avatar: "DK", ticketCount: 1, lastActive: "2026-03-24T07:30:00Z" },
+  { id: "u6", name: "Kavya Reddy",      email: "kavya@user.io",  password: "user123", avatar: "KR", ticketCount: 1, lastActive: "2026-03-24T08:00:00Z" },
+  { id: "u7", name: "Farhan Sheikh",    email: "farhan@user.io", password: "user123", avatar: "FS", ticketCount: 1, lastActive: "2026-03-23T09:30:00Z" },
+  { id: "u8", name: "Geeta Pillai",     email: "geeta@user.io",  password: "user123", avatar: "GP", ticketCount: 1, lastActive: "2026-03-15T08:30:00Z" },
+  { id: "u9", name: "Bhavna Choudhary", email: "bhavna@user.io", password: "user123", avatar: "BC", ticketCount: 1, lastActive: "2026-03-24T09:00:00Z" },
 ];
