@@ -1,3 +1,10 @@
+// ─── Admin credentials ────────────────────────────────────────────────────────
+
+export const adminCredentials = {
+  email: "admin@crm.io",
+  password: "admin123",
+};
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export type Sector = "IT" | "Healthcare" | "Education" | "Finance";
@@ -13,18 +20,24 @@ export type TicketStatus =
   | "Closed";
 export type TicketPriority = "High" | "Medium" | "Low";
 export type TicketLabel = "New" | "Assigned" | "Unassigned" | "Starred" | "Trashed";
+export type AgentAvailability = "available" | "at_capacity" | "offline";
 
 export interface Agent {
   id: string;
   name: string;
   email: string;
+  password: string;
   avatar: string;
   level: AgentLevel;
   sector: Sector;
   supervisorId: string | null;
   activeTickets: number;
   resolvedTickets: number;
+  // true when the agent is signed in to the portal
   online: boolean;
+  // Auto-computed from activeTickets; "offline" = not signed in
+  // Backend integration: PATCH /api/agents/:id/availability
+  availability: AgentAvailability;
 }
 
 export interface EscalationStep {
@@ -100,27 +113,27 @@ export interface User {
 
 export const agents: Agent[] = [
   // IT Sector
-  { id: "a1", name: "Riya Sharma", email: "riya@crm.io", avatar: "RS", level: "L3", sector: "IT", supervisorId: null, activeTickets: 2, resolvedTickets: 48, online: true },
-  { id: "a2", name: "Arjun Mehta", email: "arjun@crm.io", avatar: "AM", level: "L2", sector: "IT", supervisorId: "a1", activeTickets: 4, resolvedTickets: 31, online: true },
-  { id: "a3", name: "Priya Nair", email: "priya@crm.io", avatar: "PN", level: "L2", sector: "IT", supervisorId: "a1", activeTickets: 3, resolvedTickets: 27, online: false },
-  { id: "a4", name: "Karan Bose", email: "karan@crm.io", avatar: "KB", level: "L1", sector: "IT", supervisorId: "a2", activeTickets: 6, resolvedTickets: 19, online: true },
-  { id: "a5", name: "Sneha Iyer", email: "sneha@crm.io", avatar: "SI", level: "L1", sector: "IT", supervisorId: "a2", activeTickets: 5, resolvedTickets: 14, online: true },
-  { id: "a6", name: "Dev Patel", email: "dev@crm.io", avatar: "DP", level: "L1", sector: "IT", supervisorId: "a3", activeTickets: 7, resolvedTickets: 11, online: false },
+  { id: "a1",  name: "Riya Sharma",     email: "riya@crm.io",   password: "agent123", avatar: "RS",  level: "L3", sector: "IT",         supervisorId: null, activeTickets: 2,  resolvedTickets: 48, online: false, availability: "offline" },
+  { id: "a2",  name: "Arjun Mehta",     email: "arjun@crm.io",  password: "agent123", avatar: "AM",  level: "L2", sector: "IT",         supervisorId: "a1", activeTickets: 4,  resolvedTickets: 31, online: false, availability: "offline" },
+  { id: "a3",  name: "Priya Nair",      email: "priya@crm.io",  password: "agent123", avatar: "PN",  level: "L2", sector: "IT",         supervisorId: "a1", activeTickets: 3,  resolvedTickets: 27, online: false, availability: "offline" },
+  { id: "a4",  name: "Karan Bose",      email: "karan@crm.io",  password: "agent123", avatar: "KB",  level: "L1", sector: "IT",         supervisorId: "a2", activeTickets: 6,  resolvedTickets: 19, online: false, availability: "offline" },
+  { id: "a5",  name: "Sneha Iyer",      email: "sneha@crm.io",  password: "agent123", avatar: "SI",  level: "L1", sector: "IT",         supervisorId: "a2", activeTickets: 5,  resolvedTickets: 14, online: false, availability: "offline" },
+  { id: "a6",  name: "Dev Patel",       email: "dev@crm.io",    password: "agent123", avatar: "DP",  level: "L1", sector: "IT",         supervisorId: "a3", activeTickets: 7,  resolvedTickets: 11, online: false, availability: "offline" },
 
   // Healthcare Sector
-  { id: "a7", name: "Dr. Ananya Roy", email: "ananya@crm.io", avatar: "AR", level: "L3", sector: "Healthcare", supervisorId: null, activeTickets: 1, resolvedTickets: 52, online: true },
-  { id: "a8", name: "Vivek Gupta", email: "vivek@crm.io", avatar: "VG", level: "L2", sector: "Healthcare", supervisorId: "a7", activeTickets: 3, resolvedTickets: 22, online: true },
-  { id: "a9", name: "Meera Das", email: "meera@crm.io", avatar: "MD", level: "L1", sector: "Healthcare", supervisorId: "a8", activeTickets: 8, resolvedTickets: 9, online: false },
+  { id: "a7",  name: "Dr. Ananya Roy",  email: "ananya@crm.io", password: "agent123", avatar: "AR",  level: "L3", sector: "Healthcare", supervisorId: null, activeTickets: 1,  resolvedTickets: 52, online: false, availability: "offline" },
+  { id: "a8",  name: "Vivek Gupta",     email: "vivek@crm.io",  password: "agent123", avatar: "VG",  level: "L2", sector: "Healthcare", supervisorId: "a7", activeTickets: 3,  resolvedTickets: 22, online: false, availability: "offline" },
+  { id: "a9",  name: "Meera Das",       email: "meera@crm.io",  password: "agent123", avatar: "MD",  level: "L1", sector: "Healthcare", supervisorId: "a8", activeTickets: 8,  resolvedTickets: 9,  online: false, availability: "offline" },
 
   // Education Sector
-  { id: "a10", name: "Prof. Suresh Rao", email: "suresh@crm.io", avatar: "SR", level: "L3", sector: "Education", supervisorId: null, activeTickets: 0, resolvedTickets: 35, online: false },
-  { id: "a11", name: "Nisha Kapoor", email: "nisha@crm.io", avatar: "NK", level: "L2", sector: "Education", supervisorId: "a10", activeTickets: 2, resolvedTickets: 18, online: true },
-  { id: "a12", name: "Rahul Singh", email: "rahul@crm.io", avatar: "RS2", level: "L1", sector: "Education", supervisorId: "a11", activeTickets: 4, resolvedTickets: 7, online: true },
+  { id: "a10", name: "Prof. Suresh Rao",email: "suresh@crm.io", password: "agent123", avatar: "SR",  level: "L3", sector: "Education",  supervisorId: null, activeTickets: 0,  resolvedTickets: 35, online: false, availability: "offline" },
+  { id: "a11", name: "Nisha Kapoor",    email: "nisha@crm.io",  password: "agent123", avatar: "NK",  level: "L2", sector: "Education",  supervisorId: "a10",activeTickets: 2,  resolvedTickets: 18, online: false, availability: "offline" },
+  { id: "a12", name: "Rahul Singh",     email: "rahul@crm.io",  password: "agent123", avatar: "RS2", level: "L1", sector: "Education",  supervisorId: "a11",activeTickets: 4,  resolvedTickets: 7,  online: false, availability: "offline" },
 
   // Finance Sector
-  { id: "a13", name: "Pooja Verma", email: "pooja@crm.io", avatar: "PV", level: "L3", sector: "Finance", supervisorId: null, activeTickets: 1, resolvedTickets: 41, online: true },
-  { id: "a14", name: "Amit Joshi", email: "amit@crm.io", avatar: "AJ", level: "L2", sector: "Finance", supervisorId: "a13", activeTickets: 3, resolvedTickets: 16, online: false },
-  { id: "a15", name: "Tanya Saxena", email: "tanya@crm.io", avatar: "TS", level: "L1", sector: "Finance", supervisorId: "a14", activeTickets: 5, resolvedTickets: 8, online: true },
+  { id: "a13", name: "Pooja Verma",     email: "pooja@crm.io",  password: "agent123", avatar: "PV",  level: "L3", sector: "Finance",    supervisorId: null, activeTickets: 1,  resolvedTickets: 41, online: false, availability: "offline" },
+  { id: "a14", name: "Amit Joshi",      email: "amit@crm.io",   password: "agent123", avatar: "AJ",  level: "L2", sector: "Finance",    supervisorId: "a13",activeTickets: 3,  resolvedTickets: 16, online: false, availability: "offline" },
+  { id: "a15", name: "Tanya Saxena",    email: "tanya@crm.io",  password: "agent123", avatar: "TS",  level: "L1", sector: "Finance",    supervisorId: "a14",activeTickets: 5,  resolvedTickets: 8,  online: false, availability: "offline" },
 ];
 
 // ─── Tickets ──────────────────────────────────────────────────────────────────
@@ -231,6 +244,153 @@ export const tickets: Ticket[] = [
     starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null,
     escalationSteps: [],
     createdAt: "2026-03-24T09:00:00Z", updatedAt: "2026-03-24T09:00:00Z",
+  },
+
+  // ── Karan Bose (a4, IT L1) ──────────────────────────────────────────────────
+  {
+    id: "TKT-014", userId: "u5", userName: "Deepak Kumar", userEmail: "deepak@user.io",
+    itemId: "ITM-401", productName: "Dell Laptop XPS 15", nature: "BSOD on startup after Windows update",
+    description: "Laptop throws a blue screen error (SYSTEM_SERVICE_EXCEPTION) right after the latest Windows update was applied. The machine reboots in a loop.",
+    attachment: "bsod_dump.txt", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    escalationSteps: [
+      { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Call", startedAt: "2026-03-23T09:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Initiated safe-mode boot and ran SFC scan. Awaiting results from user." },
+    ],
+    createdAt: "2026-03-23T08:30:00Z", updatedAt: "2026-03-23T09:00:00Z",
+  },
+  {
+    id: "TKT-015", userId: "u6", userName: "Kavya Reddy", userEmail: "kavya@user.io",
+    itemId: "ITM-088", productName: "HP Printer LaserJet", nature: "Print jobs stuck in queue",
+    description: "All print jobs get stuck in the Windows print queue and cannot be cleared even after spooler restart.",
+    attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    escalationSteps: [
+      { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Email", startedAt: "2026-03-24T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent printer driver reinstallation guide to user." },
+    ],
+    createdAt: "2026-03-24T09:45:00Z", updatedAt: "2026-03-24T10:00:00Z",
+  },
+  {
+    id: "TKT-016", userId: "u7", userName: "Farhan Sheikh", userEmail: "farhan@user.io",
+    itemId: "ITM-050", productName: "USB Hub 7-Port", nature: "USB hub only powers 3 of 7 ports",
+    description: "After plugging in a USB hub, only 3 ports receive power. Remaining 4 ports show devices as unrecognised.",
+    attachment: null, status: "Assigned", priority: "Low", label: "Assigned",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    escalationSteps: [
+      { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Email", startedAt: "2026-03-24T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Asked user to test on another machine to isolate port vs hub issue." },
+    ],
+    createdAt: "2026-03-24T10:30:00Z", updatedAt: "2026-03-24T11:00:00Z",
+  },
+
+  // ── Sneha Iyer (a5, IT L1) ──────────────────────────────────────────────────
+  {
+    id: "TKT-017", userId: "u3", userName: "Rohan Tiwari", userEmail: "rohan@user.io",
+    itemId: "ITM-210", productName: "Network Switch Pro", nature: "VPN disconnects every 15 minutes",
+    description: "Company VPN drops connection every 15 minutes precisely. Users in the Hyderabad branch are affected. Reconnecting manually each time is blocking work.",
+    attachment: "vpn_logs.txt", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer",
+    escalationSteps: [
+      { level: "L1", agentId: "a5", agentName: "Sneha Iyer", method: "Call", startedAt: "2026-03-22T13:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Collected VPN logs. Identified keep-alive setting mismatch — pushing config update." },
+    ],
+    createdAt: "2026-03-22T12:30:00Z", updatedAt: "2026-03-22T13:00:00Z",
+  },
+  {
+    id: "TKT-018", userId: "u4", userName: "Sonal Mehta", userEmail: "sonal@user.io",
+    itemId: "ITM-401", productName: "Dell Laptop XPS 15", nature: "Battery drains from 100% to 20% in 90 mins",
+    description: "Laptop battery health dropped significantly after a firmware update. Full charge now lasts less than 2 hours under normal load.",
+    attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer",
+    escalationSteps: [
+      { level: "L1", agentId: "a5", agentName: "Sneha Iyer", method: "Email", startedAt: "2026-03-24T08:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent power calibration and battery report steps. Awaiting battery health report from user." },
+    ],
+    createdAt: "2026-03-23T17:00:00Z", updatedAt: "2026-03-24T08:00:00Z",
+  },
+
+  // ── Meera Das (a9, Healthcare L1) ────────────────────────────────────────────
+  {
+    id: "TKT-019", userId: "u2", userName: "Anita Desai", userEmail: "anita@user.io",
+    itemId: "ITM-102", productName: "Patient Monitor Model Z", nature: "Alarm thresholds reset after power cycle",
+    description: "Every time the monitor is power-cycled the SpO2 and HR alarm thresholds reset to factory defaults, requiring manual reconfiguration each shift.",
+    attachment: "monitor_config.pdf", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das",
+    escalationSteps: [
+      { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Call", startedAt: "2026-03-23T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Contacted device manufacturer. Waiting for firmware patch ETA." },
+    ],
+    createdAt: "2026-03-23T10:30:00Z", updatedAt: "2026-03-23T11:00:00Z",
+  },
+  {
+    id: "TKT-020", userId: "u8", userName: "Geeta Pillai", userEmail: "geeta@user.io",
+    itemId: "ITM-999", productName: "Blood Pressure Monitor", nature: "Device won't pair with mobile app",
+    description: "Bluetooth pairing between the BP monitor and the hospital mobile app fails on all ward tablets. App shows 'Device not found' despite monitor being in pairing mode.",
+    attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
+    starred: false, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das",
+    escalationSteps: [
+      { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-24T09:30:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent Bluetooth reset and re-pair guide. Asked nursing staff to confirm BLE is enabled on tablets." },
+    ],
+    createdAt: "2026-03-24T09:00:00Z", updatedAt: "2026-03-24T09:30:00Z",
+  },
+
+  // ── Rahul Singh (a12, Education L1) ──────────────────────────────────────────
+  {
+    id: "TKT-021", userId: "u9", userName: "Bhavna Choudhary", userEmail: "bhavna@user.io",
+    itemId: "ITM-310", productName: "LMS Platform License", nature: "Assignment submissions not saving",
+    description: "Students submit assignments via the LMS portal but submissions are not recorded. The portal shows a success message but the instructor sees no submission in the grade book.",
+    attachment: "lms_error.png", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh",
+    escalationSteps: [
+      { level: "L1", agentId: "a12", agentName: "Rahul Singh", method: "Email", startedAt: "2026-03-24T07:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Identified database write failure in submission module. Raised a platform support ticket with the LMS vendor." },
+    ],
+    createdAt: "2026-03-24T06:30:00Z", updatedAt: "2026-03-24T07:00:00Z",
+  },
+
+  // ── Tanya Saxena (a15, Finance L1) ───────────────────────────────────────────
+  {
+    id: "TKT-022", userId: "u9", userName: "Bhavna Choudhary", userEmail: "bhavna@user.io",
+    itemId: "ITM-780", productName: "Accounting Software Pro", nature: "Invoice numbering reset to 1 after month-end",
+    description: "After running the month-end close process, the invoice auto-numbering sequence reset back to 1 instead of continuing from the last number, causing duplicate invoice numbers.",
+    attachment: "invoice_sequence.xlsx", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena",
+    escalationSteps: [
+      { level: "L1", agentId: "a15", agentName: "Tanya Saxena", method: "Call", startedAt: "2026-03-24T08:30:00Z", resolvedAt: null, outcome: "In Progress", notes: "Reviewed month-end procedure logs. Found sequence counter not persisting correctly. Escalation may be required." },
+    ],
+    createdAt: "2026-03-24T08:00:00Z", updatedAt: "2026-03-24T08:30:00Z",
+  },
+  {
+    id: "TKT-023", userId: "u4", userName: "Sonal Mehta", userEmail: "sonal@user.io",
+    itemId: "ITM-555", productName: "Payroll Software Suite", nature: "PF deduction not calculating correctly for new joiners",
+    description: "Employees who joined after March 1st have incorrect PF deductions in the March payslip. The system is using the old CTC instead of the new joining salary.",
+    attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
+    starred: false, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena",
+    escalationSteps: [
+      { level: "L1", agentId: "a15", agentName: "Tanya Saxena", method: "Email", startedAt: "2026-03-24T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Verified joining dates and salary configurations. Issue confirmed for 3 employees. Preparing correction batch." },
+    ],
+    createdAt: "2026-03-24T09:30:00Z", updatedAt: "2026-03-24T10:00:00Z",
+  },
+
+  // ── Arjun Mehta (a2, IT L2) ──────────────────────────────────────────────────
+  {
+    id: "TKT-024", userId: "u5", userName: "Deepak Kumar", userEmail: "deepak@user.io",
+    itemId: "ITM-205", productName: "Firewall Appliance", nature: "Firewall dropping HTTPS traffic intermittently",
+    description: "Certain HTTPS requests to external APIs are being silently dropped by the firewall. Affects CI/CD pipelines and payment gateway integrations.",
+    attachment: "firewall_trace.pcap", status: "In Progress", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a2", assignedAgentName: "Arjun Mehta",
+    escalationSteps: [
+      { level: "L2", agentId: "a2", agentName: "Arjun Mehta", method: "Call", startedAt: "2026-03-24T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Reviewing packet captures. Suspect deep packet inspection rule causing false positives on API traffic." },
+    ],
+    createdAt: "2026-03-24T10:00:00Z", updatedAt: "2026-03-24T11:00:00Z",
+  },
+
+  // ── Vivek Gupta (a8, Healthcare L2) ──────────────────────────────────────────
+  {
+    id: "TKT-025", userId: "u2", userName: "Anita Desai", userEmail: "anita@user.io",
+    itemId: "ITM-102", productName: "Patient Monitor Model Z", nature: "Network connectivity drops in ICU wing",
+    description: "Patient monitors in the ICU wing lose network connectivity every 4-6 hours, causing gaps in remote monitoring data. Issue started after network switch replacement last week.",
+    attachment: "network_topology.pdf", status: "Escalated to L2", priority: "High", label: "Assigned",
+    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a8", assignedAgentName: "Vivek Gupta",
+    escalationSteps: [
+      { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-22T08:00:00Z", resolvedAt: "2026-03-22T14:00:00Z", outcome: "Escalated", notes: "Basic network troubleshooting exhausted. Switch configuration requires L2 access." },
+      { level: "L2", agentId: "a8", agentName: "Vivek Gupta", method: "Visit", startedAt: "2026-03-23T09:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "On-site visit completed. Identified VLAN misconfiguration on the new switch. Applying fix in maintenance window tonight." },
+    ],
+    createdAt: "2026-03-22T07:30:00Z", updatedAt: "2026-03-23T09:00:00Z",
   },
 ];
 
