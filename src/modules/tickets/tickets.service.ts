@@ -34,7 +34,11 @@ export class TicketsService {
 
         const savedTicket = await newTicket.save();
         await this.assignTicket(savedTicket);
-        return (await this.ticketModel.findById(savedTicket._id).populate('assignedTo', 'name email').exec())!;
+        return (await this.ticketModel.findById(savedTicket._id)
+            .populate('assignedTo', 'name email')
+            .populate('orderId')
+            .populate('productId')
+            .exec())!;
     }
 
     async updateStatus(id: string, status: TicketStatus, userId: string): Promise<Ticket> {
@@ -85,10 +89,14 @@ export class TicketsService {
             performedBy: new Types.ObjectId(userId),
             timestamp: new Date(),
         } as any);
-
+ 
         const savedTicket = await ticket.save();
         await this.assignTicket(savedTicket);
-        return (await this.ticketModel.findById(savedTicket._id).populate('assignedTo', 'name email').exec())!;
+        return (await this.ticketModel.findById(savedTicket._id)
+            .populate('assignedTo', 'name email')
+            .populate('orderId')
+            .populate('productId')
+            .exec())!;
     }
 
     async getAgentPerformance() {
@@ -166,6 +174,8 @@ export class TicketsService {
         const ticket = await this.ticketModel.findById(id)
             .populate('createdBy', 'name email')
             .populate('assignedTo', 'name email')
+            .populate('orderId')
+            .populate('productId')
             .exec();
 
         if (!ticket) throw new NotFoundException('Ticket not found');
@@ -202,6 +212,8 @@ export class TicketsService {
         return this.ticketModel.find(query)
             .populate('createdBy', 'name email')
             .populate('assignedTo', 'name email')
+            .populate('orderId')
+            .populate('productId')
             .exec();
     }
 }
