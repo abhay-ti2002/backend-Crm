@@ -1,9 +1,12 @@
 "use client";
 
-import { Package, Ticket, AlertTriangle } from "lucide-react";
+import { Package, Ticket, AlertTriangle, Plus, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { products, Sector } from "@/lib/mockData";
+import { Sector } from "@/lib/mockData";
+import { useProductStore } from "@/stores/productStore";
+import { AddProductModal } from "@/components/admin/AddProductModal";
 import { useState } from "react";
 
 const SECTORS: (Sector | "All")[] = ["All", "IT", "Healthcare", "Education", "Finance"];
@@ -46,9 +49,12 @@ const COLS = "grid-cols-[1fr_8rem_7rem_9rem_8.5rem_6rem]";
 const TH = "py-3 px-4 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500";
 
 export default function ProductsPage() {
+  const { products } = useProductStore();
   const [sector, setSector] = useState<Sector | "All">("All");
+  const [modalOpen, setModalOpen] = useState(false);
 
   const filtered = sector === "All" ? products : products.filter((p) => p.sector === sector);
+  const maxTickets = filtered.reduce((m, p) => Math.max(m, p.ticketCount), 0);
 
   const warnings = filtered.filter((p) => {
     const { warning } = stockStatus(p.stock, p.unit);
@@ -57,6 +63,8 @@ export default function ProductsPage() {
 
   return (
     <div className="flex flex-col gap-4 h-full overflow-hidden">
+      <AddProductModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
       {/* Header */}
       <div className="flex items-start justify-between gap-4 shrink-0">
         <div>
@@ -67,12 +75,17 @@ export default function ProductsPage() {
             {products.length} products across all sectors
           </p>
         </div>
-        {warnings > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg px-2.5 py-1.5 shrink-0">
-            <AlertTriangle className="w-3.5 h-3.5" />
-            {warnings} item{warnings !== 1 ? "s" : ""} need restocking
-          </div>
-        )}
+        <div className="flex items-center gap-2 shrink-0">
+          {warnings > 0 && (
+            <div className="flex items-center gap-1.5 text-xs text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-lg px-2.5 py-1.5">
+              <AlertTriangle className="w-3.5 h-3.5" />
+              {warnings} item{warnings !== 1 ? "s" : ""} need restocking
+            </div>
+          )}
+          <Button size="sm" className="gap-1.5 text-xs" onClick={() => setModalOpen(true)}>
+            <Plus className="w-3.5 h-3.5" /> Add Product
+          </Button>
+        </div>
       </div>
 
       {/* Sector filter */}
@@ -172,8 +185,10 @@ export default function ProductsPage() {
 
                       {/* Tickets */}
                       <div className="py-3 px-4 flex items-center justify-end gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-                        <Ticket className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />
-                        <span className="font-semibold text-slate-700 dark:text-slate-300 tabular-nums">
+                        {maxTickets > 0 && p.ticketCount === maxTickets
+                          ? <TrendingUp className="w-3.5 h-3.5 text-amber-500 dark:text-amber-400" />
+                          : <Ticket className="w-3.5 h-3.5 text-slate-300 dark:text-slate-600" />}
+                        <span className={`font-semibold tabular-nums ${maxTickets > 0 && p.ticketCount === maxTickets ? "text-amber-600 dark:text-amber-400" : "text-slate-700 dark:text-slate-300"}`}>
                           {p.ticketCount}
                         </span>
                       </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import { LayoutGrid, GitBranch, Plus, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +10,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAgentStore } from "@/stores/agentStore";
 import { RoleBadge } from "@/components/shared/RoleBadge";
 import { Agent, AgentLevel, Sector } from "@/lib/mockData";
+import { AddAgentModal } from "@/components/admin/AddAgentModal";
 
 // react-organizational-chart uses document — loaded client-side only
 const AgentOrgChart = dynamic(
@@ -93,6 +95,7 @@ function ColumnsView({ sector }: { sector: Sector }) {
 
 export default function AgentsPage() {
   const { selectedSector, viewMode, setSelectedSector, setViewMode, agents } = useAgentStore();
+  const [modalOpen, setModalOpen] = useState(false);
   const displaySector: Sector = selectedSector === "All" ? SECTORS[0] : selectedSector;
 
   const sectorCounts = SECTORS.reduce<Record<Sector, number>>((acc, s) => {
@@ -102,13 +105,15 @@ export default function AgentsPage() {
 
   return (
     <div className="space-y-5">
+      <AddAgentModal open={modalOpen} onClose={() => setModalOpen(false)} />
+
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <h2 className="font-heading text-base font-semibold text-slate-800 dark:text-slate-100">Agent Hierarchy</h2>
           <p className="text-xs text-slate-500 dark:text-slate-400">{agents.length} agents across {SECTORS.length} sectors</p>
         </div>
-        <Button size="sm" className="gap-1.5 text-xs">
+        <Button size="sm" className="gap-1.5 text-xs" onClick={() => setModalOpen(true)}>
           <Plus className="w-3.5 h-3.5" /> Add Agent
         </Button>
       </div>

@@ -206,8 +206,12 @@ export default function LogsPage() {
 
                         {/* Problem summary */}
                         <div className="py-3.5 px-4 flex flex-col justify-center min-w-0">
-                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">{log.problemSummary}</p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">{log.solutionSummary}</p>
+                          <p className="text-sm font-medium text-slate-700 dark:text-slate-300 truncate">
+                            {log.problemSummary}
+                          </p>
+                          {/* <p className="text-xs text-slate-400 dark:text-slate-500 truncate mt-0.5">
+                            {log.solutionSummary}
+                          </p> */}
                         </div>
 
                         {/* Priority */}

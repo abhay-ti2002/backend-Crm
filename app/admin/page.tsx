@@ -1,4 +1,5 @@
 "use client";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Ticket, CheckCircle, Clock, Users, Star, Trash2, Inbox,
@@ -221,6 +222,13 @@ export default function DashboardPage() {
     .sort((a, b) => b.resolvedTickets - a.resolvedTickets)
     .slice(0, 5);
 
+  // Animate charts on initial mount only — prevents re-animation on sidebar resize
+  const [animateOnce, setAnimateOnce] = useState(true);
+  useEffect(() => {
+    const t = setTimeout(() => setAnimateOnce(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
   return (
     <div 
     style={{
@@ -293,7 +301,7 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardContent className="px-2 pb-4">
-            <ResponsiveContainer width="100%" height={200} debounce={300}>
+            <ResponsiveContainer width="100%" height={200} debounce={0}>
               <AreaChart data={ticketTrendData} margin={{ top: 8, right: 12, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="gradOpen" x1="0" y1="0" x2="0" y2="1">
@@ -339,7 +347,7 @@ export default function DashboardPage() {
                   fill="url(#gradOpen)"
                   dot={false}
                   activeDot={{ r: 4, strokeWidth: 0, fill: "#22d3ee" }}
-                  isAnimationActive
+                  isAnimationActive={animateOnce}
                   animationDuration={900}
                   animationEasing="ease-out"
                 />
@@ -352,7 +360,7 @@ export default function DashboardPage() {
                   fill="url(#gradResolved)"
                   dot={false}
                   activeDot={{ r: 4, strokeWidth: 0, fill: "#4ade80" }}
-                  isAnimationActive
+                  isAnimationActive={animateOnce}
                   animationDuration={900}
                   animationEasing="ease-out"
                   animationBegin={150}
@@ -368,7 +376,7 @@ export default function DashboardPage() {
             <CardTitle className="text-sm font-semibold text-slate-700 dark:text-slate-200">Tickets by Sector</CardTitle>
           </CardHeader>
           <CardContent className="px-2 pb-4">
-            <ResponsiveContainer width="100%" height={200} debounce={300}>
+            <ResponsiveContainer width="100%" height={200} debounce={0}>
               <BarChart
                 data={sectorData}
                 layout="vertical"
@@ -399,7 +407,7 @@ export default function DashboardPage() {
                 <Bar
                   dataKey="value"
                   radius={[0, 6, 6, 0]}
-                  isAnimationActive
+                  isAnimationActive={animateOnce}
                   animationDuration={800}
                   animationEasing="ease-out"
                 >

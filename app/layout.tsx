@@ -26,7 +26,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TicketCRM — Admin Dashboard",
+  title: "TICKR",
   description: "Distributed ticketing system and CRM",
 };
 
