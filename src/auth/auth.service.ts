@@ -19,7 +19,7 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   // Signup
   async signup(data: SignupDto) {
@@ -59,7 +59,9 @@ export class AuthService {
   }
 
   // Create Agent (Admin Only)
-  async createAgent(data: SignupDto & { sector?: string; supportLevel?: number }) {
+  async createAgent(
+    data: SignupDto & { sector?: string; supportLevel?: number },
+  ) {
     const { email, password, name, sector, supportLevel } = data;
 
     const existingUser = await this.userModel.findOne({ email });
