@@ -29,8 +29,23 @@ async function seed() {
         console.log('Connected!');
 
         const User = mongoose.model('User', UserSchema);
-        const password = 'password123';
+        const password = 'agent123';
         const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Add specific agent karan@crm.io
+        const karanEmail = 'karan@crm.io';
+        const existingKaran = await User.findOne({ email: karanEmail });
+        if (!existingKaran) {
+            await User.create({
+                name: 'Karan',
+                email: karanEmail,
+                password: hashedPassword,
+                role: 'agent',
+                sector: 'Support',
+                supportLevel: 1,
+            });
+            console.log(`Created: Karan (${karanEmail})`);
+        }
 
         const sectors = ['Finance', 'IT', 'HR', 'Operations', 'Support'];
         let count = 0;

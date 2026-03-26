@@ -19,7 +19,7 @@ export class AuthService {
   constructor(
     @InjectModel(User.name) private userModel: Model<UserDocument>,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   // Signup
   async signup(data: SignupDto) {
@@ -50,12 +50,15 @@ export class AuthService {
     }
 
     const isMatch = await user.comparePassword(password);
+    console.log(`[AuthService] Password match for ${email}: ${isMatch}`);
 
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    return this.generateToken(user);
+    const tokenData = this.generateToken(user);
+    console.log(`[AuthService] Generating token for ${email}:`, tokenData.user);
+    return tokenData;
   }
 
   // Create Agent (Admin Only)

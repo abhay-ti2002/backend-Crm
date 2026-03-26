@@ -40,7 +40,7 @@ export class TicketsController {
     @CheckAbility({ action: 'read', subject: Ticket })
     async findOne(@Param('id') id: string, @Req() req) {
         const ticket = await this.ticketsService.findOne(id, req.user);
-        req.subject = ticket; // 🔥 attach here
+        req.subject = ticket; 
         return ticket;
     }
 

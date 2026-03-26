@@ -9,7 +9,7 @@ dotenv.config({ path: join(process.cwd(), '.env') });
 const MONGO_URI = process.env.MONGO_URI;
 
 if (!MONGO_URI) {
-    console.error('❌ MONGO_URI not found in .env');
+    console.error(' MONGO_URI not found in .env');
     process.exit(1);
 }
 
@@ -18,7 +18,6 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     role: { type: String, enum: ['admin', 'agent', 'customer'], default: 'customer' },
-    supportLevel: { type: Number, default: 1 },
 });
 
 async function seed() {
@@ -29,33 +28,24 @@ async function seed() {
 
         const User = mongoose.model('User', UserSchema);
 
-        const adminEmail = 'admin@crm.io';
-        const adminPassword = 'admin123';
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
+        const email = 'jass@user.io';
+        const password = 'user123';
+        const hashedPassword = await bcrypt.hash(password, 10);
 
-        const adminEntry = {
-            name: 'admin',
-            email: adminEmail,
-            password: hashedPassword,
-            role: 'admin',
-            supportLevel: 3, // Highest level for admin
-        };
-
-        const existing = await User.findOne({ email: adminEmail });
+        const existing = await User.findOne({ email });
         if (existing) {
-            console.log('⚠️ Admin with this email already exists. Updating password...');
+            console.log(`⚠️ User ${email} already exists. Updating password...`);
             existing.password = hashedPassword;
             await existing.save();
-            console.log('✅ Password updated!');
         } else {
-            await User.create(adminEntry);
-            console.log('✅ Admin account created successfully!');
+            await User.create({
+                name: 'Jass',
+                email,
+                password: hashedPassword,
+                role: 'customer',
+            });
+            console.log(`✅ User ${email} created successfully!`);
         }
-
-        console.log('\n--- Credentials ---');
-        console.log(`Email: ${adminEmail}`);
-        console.log(`Password: ${adminPassword}`);
-        console.log('-------------------\n');
 
     } catch (error) {
         console.error('❌ Seeding failed:', error);
