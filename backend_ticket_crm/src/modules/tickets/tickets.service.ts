@@ -261,4 +261,10 @@ export class TicketsService {
                 .exec();
         }
     }
+
+    async findById(id: string): Promise<Ticket> {
+        const ticket = await this.ticketModel.findById(id).exec();
+        if (!ticket) throw new NotFoundException('Ticket not found');
+        return ticket;
+    }
 }

@@ -9,6 +9,8 @@ import { ItemsModule } from './modules/items/items.module';
 import { OrdersModule } from './modules/orders/orders.module';
 import { TicketsModule } from './modules/tickets/tickets.module';
 import { MailingModule } from './modules/mailing/mailing.module';
+import { MetaModule } from './modules/meta/meta.module';
+import { CaslModule } from './modules/casl/casl.module';
 
 @Module({
   imports: [
@@ -23,6 +25,8 @@ import { MailingModule } from './modules/mailing/mailing.module';
     OrdersModule,
     TicketsModule,
     MailingModule,
+    MetaModule,
+    CaslModule,
   ],
   controllers: [AppController],
   providers: [AppService],
