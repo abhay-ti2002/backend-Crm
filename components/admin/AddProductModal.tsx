@@ -96,7 +96,7 @@ export function AddProductModal({ open, onClose }: Props) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold text-slate-600 dark:text-slate-400">Category</Label>
-              <Select value={category} onValueChange={(v) => { setCategory(v); setErrors((p) => ({ ...p, category: "" })); }}>
+              <Select value={category} onValueChange={(v) => { setCategory(v || ""); setErrors((p) => ({ ...p, category: "" })); }}>
                 <SelectTrigger className="dark:bg-slate-800 dark:border-slate-700 dark:text-slate-100">
                   <SelectValue placeholder="Select category" />
                 </SelectTrigger>

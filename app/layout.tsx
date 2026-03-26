@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Jost, Space_Grotesk, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
+import { AuthProvider } from "@/context/AuthContext";
 
 // Body / UI content — clean geometric, excellent readability at small sizes
 const jost = Jost({
@@ -42,7 +43,9 @@ export default function RootLayout({
       className={`${jost.variable} ${spaceGrotesk.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

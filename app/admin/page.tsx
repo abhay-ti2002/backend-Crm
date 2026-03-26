@@ -402,7 +402,7 @@ export default function DashboardPage() {
                     padding: "8px 12px",
                   }}
                   cursor={{ fill: "currentColor", className: "text-slate-100/60 dark:text-slate-700/30" }}
-                  formatter={(v: number) => [v, "Tickets"]}
+                  formatter={(v: number | any) => [v, "Tickets"]}
                 />
                 <Bar
                   dataKey="value"
@@ -419,7 +419,7 @@ export default function DashboardPage() {
                     position="right"
                     style={{ fontSize: 11, fontWeight: 700, fill: "currentColor" }}
                     className="text-slate-600 dark:text-slate-300"
-                    formatter={(v: number) => {
+                    formatter={(v: number | any) => {
                       const total = sectorData.reduce((sum, x) => sum + x.value, 0);
                       return `${v} (${Math.round((v / total) * 100)}%)`;
                     }}

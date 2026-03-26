@@ -10,14 +10,10 @@ import { useUserSessionStore } from "@/stores/userSessionStore";
 import { adminCredentials, users } from "@/lib/mockData";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { login as loginApi } from "@/lib/auth";
+import { useAuth } from "@/context/AuthContext";
 
 export default function LoginPage() {
-  const router = useRouter();
-  const { agents, setOnlineOnLogin } = useAgentStore();
-  const { setCurrentAgent } = useAgentSessionStore();
-  const { login: adminLogin } = useAdminSessionStore();
-  const { setCurrentUser } = useUserSessionStore();
+  const { login } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -31,27 +27,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await loginApi({
+      await login({
         email: email.trim().toLowerCase(),
         password,
       });
-      //  console.log(res);
-
-      // If using JWT (localStorage)
-      localStorage.setItem("token", res.access_token);
-
-      //  Store user in Zustand (optional)
-      if (res.user?.role === "admin") {
-        adminLogin();
-        router.push("/admin");
-      } else if (res.user?.role === "agent") {
-        setCurrentAgent(res.user.id);
-        router.push("/agent/dashboard");
-      } else {
-        setCurrentUser(res.user?.id);
-        router.push("/user");
-      }
-      //eslint-disable-line
     } catch (err: any) {
       setError(err.message || "Login failed");
     } finally {

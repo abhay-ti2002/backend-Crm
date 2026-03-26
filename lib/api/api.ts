@@ -6,6 +6,9 @@ export const api = async (endpoint: string, options: RequestInit = {}) => {
     headers: {
       "Content-Type": "application/json",
       ...(options.headers || {}),
+      ...(typeof window !== "undefined" && localStorage.getItem("tickr_token")
+        ? { Authorization: `Bearer ${localStorage.getItem("tickr_token")}` }
+        : {}),
     },
     credentials: "include", // important for auth (cookies)
   });

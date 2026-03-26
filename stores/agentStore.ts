@@ -55,6 +55,7 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
       supervisorId: null,
       activeTickets: 0,
       resolvedTickets: 0,
+      password:"assword123",
       online: false,
       availability: "offline",
     };
