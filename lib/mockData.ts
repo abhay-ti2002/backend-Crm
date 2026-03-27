@@ -7,7 +7,7 @@ export const adminCredentials = {
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type Sector = "IT" | "Healthcare" | "Education" | "Finance";
+export type Sector = "Finance" | "IT" | "HR" | "Operations" | "Support" | "Healthcare" | "Education";
 export type AgentLevel = "L1" | "L2" | "L3";
 export type ResolutionMethod = "Email" | "Call" | "Visit";
 export type TicketStatus =
@@ -17,7 +17,8 @@ export type TicketStatus =
   | "Escalated to L2"
   | "Escalated to L3"
   | "Resolved"
-  | "Closed";
+  | "Closed"
+  | "Forwarded";
 export type TicketPriority = "High" | "Medium" | "Low";
 export type TicketLabel = "New" | "Assigned" | "Unassigned" | "Starred" | "Trashed";
 export type AgentAvailability = "available" | "at_capacity" | "offline";
@@ -69,6 +70,7 @@ export interface Ticket {
   sector: Sector | null;
   assignedAgentId: string | null;
   assignedAgentName: string | null;
+  assignedAgentEmail: string | null;
   escalationSteps: EscalationStep[];
   createdAt: string;
   updatedAt: string;
@@ -112,30 +114,7 @@ export interface User {
 
 // ─── Agents ───────────────────────────────────────────────────────────────────
 
-export const agents: Agent[] = [
-  // IT Sector
-  { id: "a1",  name: "Riya Sharma",     email: "riya@crm.io",   password: "agent123", avatar: "RS",  level: "L3", sector: "IT",         supervisorId: null, activeTickets: 2,  resolvedTickets: 48, online: false, availability: "offline" },
-  { id: "a2",  name: "Arjun Mehta",     email: "arjun@crm.io",  password: "agent123", avatar: "AM",  level: "L2", sector: "IT",         supervisorId: "a1", activeTickets: 4,  resolvedTickets: 31, online: false, availability: "offline" },
-  { id: "a3",  name: "Priya Nair",      email: "priya@crm.io",  password: "agent123", avatar: "PN",  level: "L2", sector: "IT",         supervisorId: "a1", activeTickets: 3,  resolvedTickets: 27, online: false, availability: "offline" },
-  { id: "a4",  name: "Karan Bose",      email: "karan@crm.io",  password: "agent123", avatar: "KB",  level: "L1", sector: "IT",         supervisorId: "a2", activeTickets: 6,  resolvedTickets: 19, online: false, availability: "offline" },
-  { id: "a5",  name: "Sneha Iyer",      email: "sneha@crm.io",  password: "agent123", avatar: "SI",  level: "L1", sector: "IT",         supervisorId: "a2", activeTickets: 5,  resolvedTickets: 14, online: false, availability: "offline" },
-  { id: "a6",  name: "Dev Patel",       email: "dev@crm.io",    password: "agent123", avatar: "DP",  level: "L1", sector: "IT",         supervisorId: "a3", activeTickets: 7,  resolvedTickets: 11, online: false, availability: "offline" },
-
-  // Healthcare Sector
-  { id: "a7",  name: "Dr. Ananya Roy",  email: "ananya@crm.io", password: "agent123", avatar: "AR",  level: "L3", sector: "Healthcare", supervisorId: null, activeTickets: 1,  resolvedTickets: 52, online: false, availability: "offline" },
-  { id: "a8",  name: "Vivek Gupta",     email: "vivek@crm.io",  password: "agent123", avatar: "VG",  level: "L2", sector: "Healthcare", supervisorId: "a7", activeTickets: 3,  resolvedTickets: 22, online: false, availability: "offline" },
-  { id: "a9",  name: "Meera Das",       email: "meera@crm.io",  password: "agent123", avatar: "MD",  level: "L1", sector: "Healthcare", supervisorId: "a8", activeTickets: 8,  resolvedTickets: 9,  online: false, availability: "offline" },
-
-  // Education Sector
-  { id: "a10", name: "Prof. Suresh Rao",email: "suresh@crm.io", password: "agent123", avatar: "SR",  level: "L3", sector: "Education",  supervisorId: null, activeTickets: 0,  resolvedTickets: 35, online: false, availability: "offline" },
-  { id: "a11", name: "Nisha Kapoor",    email: "nisha@crm.io",  password: "agent123", avatar: "NK",  level: "L2", sector: "Education",  supervisorId: "a10",activeTickets: 2,  resolvedTickets: 18, online: false, availability: "offline" },
-  { id: "a12", name: "Rahul Singh",     email: "rahul@crm.io",  password: "agent123", avatar: "RS2", level: "L1", sector: "Education",  supervisorId: "a11",activeTickets: 4,  resolvedTickets: 7,  online: false, availability: "offline" },
-
-  // Finance Sector
-  { id: "a13", name: "Pooja Verma",     email: "pooja@crm.io",  password: "agent123", avatar: "PV",  level: "L3", sector: "Finance",    supervisorId: null, activeTickets: 1,  resolvedTickets: 41, online: false, availability: "offline" },
-  { id: "a14", name: "Amit Joshi",      email: "amit@crm.io",   password: "agent123", avatar: "AJ",  level: "L2", sector: "Finance",    supervisorId: "a13",activeTickets: 3,  resolvedTickets: 16, online: false, availability: "offline" },
-  { id: "a15", name: "Tanya Saxena",    email: "tanya@crm.io",  password: "agent123", avatar: "TS",  level: "L1", sector: "Finance",    supervisorId: "a14",activeTickets: 5,  resolvedTickets: 8,  online: false, availability: "offline" },
-];
+export const agents: Agent[] = [];
 
 // ─── Tickets ──────────────────────────────────────────────────────────────────
 
@@ -145,7 +124,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-401", productName: "Dell Laptop XPS 15", nature: "Hardware failure — screen flickering",
     description: "The laptop screen starts flickering after 10 minutes of use. Issue is reproducible consistently.",
     attachment: "screen_flicker.mp4", status: "Escalated to L2", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "IT", assignedAgentId: "a2", assignedAgentName: "Arjun Mehta",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a2", assignedAgentName: "Arjun Mehta", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Email", startedAt: "2026-03-20T09:00:00Z", resolvedAt: "2026-03-21T11:00:00Z", outcome: "Escalated", notes: "Sent troubleshooting email. User confirmed issue persists after driver update." },
       { level: "L2", agentId: "a2", agentName: "Arjun Mehta", method: "Call", startedAt: "2026-03-21T14:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Scheduled a call for hardware diagnostics." },
@@ -157,7 +136,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-102", productName: "Patient Monitor Model Z", nature: "Device not syncing with hospital software",
     description: "The patient monitor stops syncing data after 30 mins of operation. Critical for ward operations.",
     attachment: null, status: "Assigned", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das",
+    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-22T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent configuration guide via email." },
     ],
@@ -168,7 +147,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-310", productName: "LMS Platform License", nature: "Cannot access course materials",
     description: "Students in batch B-2024 cannot log into the LMS platform. Error 403 on all accounts.",
     attachment: "error_screenshot.png", status: "Resolved", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh",
+    starred: false, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a12", agentName: "Rahul Singh", method: "Email", startedAt: "2026-03-18T09:00:00Z", resolvedAt: "2026-03-18T15:00:00Z", outcome: "Resolved", notes: "Reset permissions for batch B-2024 accounts. Issue was a misconfigured role assignment after a platform update." },
     ],
@@ -179,7 +158,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-555", productName: "Payroll Software Suite", nature: "Salary disbursement calculation error",
     description: "March payroll shows incorrect TDS deductions for 12 employees in the Pune office.",
     attachment: "payroll_report.xlsx", status: "Escalated to L3", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Finance", assignedAgentId: "a13", assignedAgentName: "Pooja Verma",
+    starred: true, trashed: false, sector: "Finance", assignedAgentId: "a13", assignedAgentName: "Pooja Verma", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a15", agentName: "Tanya Saxena", method: "Email", startedAt: "2026-03-19T09:00:00Z", resolvedAt: "2026-03-19T17:00:00Z", outcome: "Escalated", notes: "Reviewed configuration. Issue requires database-level fix." },
       { level: "L2", agentId: "a14", agentName: "Amit Joshi", method: "Call", startedAt: "2026-03-20T10:00:00Z", resolvedAt: "2026-03-20T16:00:00Z", outcome: "Escalated", notes: "On-call diagnosis done. Root cause in payroll engine config. L3 visit needed." },
@@ -192,7 +171,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-210", productName: "Network Switch Pro", nature: "Office network drops every 2 hours",
     description: "The network switch reboots automatically every 2 hours causing full office downtime.",
     attachment: "network_logs.txt", status: "Open", priority: "High", label: "Unassigned",
-    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null,
+    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null, assignedAgentEmail: null,
     escalationSteps: [],
     createdAt: "2026-03-24T07:30:00Z", updatedAt: "2026-03-24T07:30:00Z",
   },
@@ -201,7 +180,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-088", productName: "HP Printer LaserJet", nature: "Printer offline on network",
     description: "Printer shows offline status even though it's powered on and connected to the same network.",
     attachment: null, status: "Open", priority: "Low", label: "New",
-    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null,
+    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null, assignedAgentEmail: null,
     escalationSteps: [],
     createdAt: "2026-03-24T08:00:00Z", updatedAt: "2026-03-24T08:00:00Z",
   },
@@ -210,7 +189,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-320", productName: "Virtual Classroom Tool", nature: "Audio not working during live sessions",
     description: "Teachers report that students cannot hear them during live class sessions despite mic working.",
     attachment: "audio_test.mp4", status: "In Progress", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh",
+    starred: false, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a12", agentName: "Rahul Singh", method: "Email", startedAt: "2026-03-23T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent audio configuration guide and scheduled a follow-up." },
     ],
@@ -221,7 +200,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-999", productName: "Blood Pressure Monitor", nature: "Readings inconsistent",
     description: "The monitor gives wildly different readings back to back. Suspected sensor calibration issue.",
     attachment: null, status: "Closed", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "Healthcare", assignedAgentId: "a8", assignedAgentName: "Vivek Gupta",
+    starred: false, trashed: false, sector: "Healthcare", assignedAgentId: "a8", assignedAgentName: "Vivek Gupta", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-15T09:00:00Z", resolvedAt: "2026-03-15T14:00:00Z", outcome: "Escalated", notes: "Email troubleshooting did not resolve. Escalated." },
       { level: "L2", agentId: "a8", agentName: "Vivek Gupta", method: "Call", startedAt: "2026-03-16T10:00:00Z", resolvedAt: "2026-03-16T12:00:00Z", outcome: "Resolved", notes: "Walked user through factory reset and recalibration. Readings now consistent." },
@@ -233,7 +212,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-050", productName: "USB Hub 7-Port", nature: "USB hub not recognized",
     description: "Hub shows as unrecognized device. Tried different ports and cables, same issue.",
     attachment: null, status: "Open", priority: "Low", label: "New",
-    starred: false, trashed: true, sector: null, assignedAgentId: null, assignedAgentName: null,
+    starred: false, trashed: true, sector: null, assignedAgentId: null, assignedAgentName: null, assignedAgentEmail: null,
     escalationSteps: [],
     createdAt: "2026-03-23T15:00:00Z", updatedAt: "2026-03-23T15:30:00Z",
   },
@@ -242,7 +221,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-780", productName: "Accounting Software Pro", nature: "GST report export failing",
     description: "Exporting GST report to PDF crashes the application every time for the March period.",
     attachment: "crash_log.txt", status: "Open", priority: "Medium", label: "New",
-    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null,
+    starred: false, trashed: false, sector: null, assignedAgentId: null, assignedAgentName: null, assignedAgentEmail: null,
     escalationSteps: [],
     createdAt: "2026-03-24T09:00:00Z", updatedAt: "2026-03-24T09:00:00Z",
   },
@@ -253,7 +232,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-401", productName: "Dell Laptop XPS 15", nature: "BSOD on startup after Windows update",
     description: "Laptop throws a blue screen error (SYSTEM_SERVICE_EXCEPTION) right after the latest Windows update was applied. The machine reboots in a loop.",
     attachment: "bsod_dump.txt", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Call", startedAt: "2026-03-23T09:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Initiated safe-mode boot and ran SFC scan. Awaiting results from user." },
     ],
@@ -264,7 +243,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-088", productName: "HP Printer LaserJet", nature: "Print jobs stuck in queue",
     description: "All print jobs get stuck in the Windows print queue and cannot be cleared even after spooler restart.",
     attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Email", startedAt: "2026-03-24T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent printer driver reinstallation guide to user." },
     ],
@@ -275,7 +254,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-050", productName: "USB Hub 7-Port", nature: "USB hub only powers 3 of 7 ports",
     description: "After plugging in a USB hub, only 3 ports receive power. Remaining 4 ports show devices as unrecognised.",
     attachment: null, status: "Assigned", priority: "Low", label: "Assigned",
-    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a4", assignedAgentName: "Karan Bose", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a4", agentName: "Karan Bose", method: "Email", startedAt: "2026-03-24T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Asked user to test on another machine to isolate port vs hub issue." },
     ],
@@ -288,7 +267,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-210", productName: "Network Switch Pro", nature: "VPN disconnects every 15 minutes",
     description: "Company VPN drops connection every 15 minutes precisely. Users in the Hyderabad branch are affected. Reconnecting manually each time is blocking work.",
     attachment: "vpn_logs.txt", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a5", agentName: "Sneha Iyer", method: "Call", startedAt: "2026-03-22T13:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Collected VPN logs. Identified keep-alive setting mismatch — pushing config update." },
     ],
@@ -299,7 +278,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-401", productName: "Dell Laptop XPS 15", nature: "Battery drains from 100% to 20% in 90 mins",
     description: "Laptop battery health dropped significantly after a firmware update. Full charge now lasts less than 2 hours under normal load.",
     attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer",
+    starred: false, trashed: false, sector: "IT", assignedAgentId: "a5", assignedAgentName: "Sneha Iyer", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a5", agentName: "Sneha Iyer", method: "Email", startedAt: "2026-03-24T08:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent power calibration and battery report steps. Awaiting battery health report from user." },
     ],
@@ -312,7 +291,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-102", productName: "Patient Monitor Model Z", nature: "Alarm thresholds reset after power cycle",
     description: "Every time the monitor is power-cycled the SpO2 and HR alarm thresholds reset to factory defaults, requiring manual reconfiguration each shift.",
     attachment: "monitor_config.pdf", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das",
+    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Call", startedAt: "2026-03-23T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Contacted device manufacturer. Waiting for firmware patch ETA." },
     ],
@@ -323,7 +302,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-999", productName: "Blood Pressure Monitor", nature: "Device won't pair with mobile app",
     description: "Bluetooth pairing between the BP monitor and the hospital mobile app fails on all ward tablets. App shows 'Device not found' despite monitor being in pairing mode.",
     attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das",
+    starred: false, trashed: false, sector: "Healthcare", assignedAgentId: "a9", assignedAgentName: "Meera Das", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-24T09:30:00Z", resolvedAt: null, outcome: "In Progress", notes: "Sent Bluetooth reset and re-pair guide. Asked nursing staff to confirm BLE is enabled on tablets." },
     ],
@@ -336,7 +315,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-310", productName: "LMS Platform License", nature: "Assignment submissions not saving",
     description: "Students submit assignments via the LMS portal but submissions are not recorded. The portal shows a success message but the instructor sees no submission in the grade book.",
     attachment: "lms_error.png", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh",
+    starred: true, trashed: false, sector: "Education", assignedAgentId: "a12", assignedAgentName: "Rahul Singh", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a12", agentName: "Rahul Singh", method: "Email", startedAt: "2026-03-24T07:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Identified database write failure in submission module. Raised a platform support ticket with the LMS vendor." },
     ],
@@ -349,7 +328,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-780", productName: "Accounting Software Pro", nature: "Invoice numbering reset to 1 after month-end",
     description: "After running the month-end close process, the invoice auto-numbering sequence reset back to 1 instead of continuing from the last number, causing duplicate invoice numbers.",
     attachment: "invoice_sequence.xlsx", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena",
+    starred: true, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a15", agentName: "Tanya Saxena", method: "Call", startedAt: "2026-03-24T08:30:00Z", resolvedAt: null, outcome: "In Progress", notes: "Reviewed month-end procedure logs. Found sequence counter not persisting correctly. Escalation may be required." },
     ],
@@ -360,7 +339,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-555", productName: "Payroll Software Suite", nature: "PF deduction not calculating correctly for new joiners",
     description: "Employees who joined after March 1st have incorrect PF deductions in the March payslip. The system is using the old CTC instead of the new joining salary.",
     attachment: null, status: "Assigned", priority: "Medium", label: "Assigned",
-    starred: false, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena",
+    starred: false, trashed: false, sector: "Finance", assignedAgentId: "a15", assignedAgentName: "Tanya Saxena", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a15", agentName: "Tanya Saxena", method: "Email", startedAt: "2026-03-24T10:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Verified joining dates and salary configurations. Issue confirmed for 3 employees. Preparing correction batch." },
     ],
@@ -373,7 +352,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-205", productName: "Firewall Appliance", nature: "Firewall dropping HTTPS traffic intermittently",
     description: "Certain HTTPS requests to external APIs are being silently dropped by the firewall. Affects CI/CD pipelines and payment gateway integrations.",
     attachment: "firewall_trace.pcap", status: "In Progress", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "IT", assignedAgentId: "a2", assignedAgentName: "Arjun Mehta",
+    starred: true, trashed: false, sector: "IT", assignedAgentId: "a2", assignedAgentName: "Arjun Mehta", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L2", agentId: "a2", agentName: "Arjun Mehta", method: "Call", startedAt: "2026-03-24T11:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "Reviewing packet captures. Suspect deep packet inspection rule causing false positives on API traffic." },
     ],
@@ -386,7 +365,7 @@ export const tickets: Ticket[] = [
     itemId: "ITM-102", productName: "Patient Monitor Model Z", nature: "Network connectivity drops in ICU wing",
     description: "Patient monitors in the ICU wing lose network connectivity every 4-6 hours, causing gaps in remote monitoring data. Issue started after network switch replacement last week.",
     attachment: "network_topology.pdf", status: "Escalated to L2", priority: "High", label: "Assigned",
-    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a8", assignedAgentName: "Vivek Gupta",
+    starred: true, trashed: false, sector: "Healthcare", assignedAgentId: "a8", assignedAgentName: "Vivek Gupta", assignedAgentEmail: "agent@crm.io",
     escalationSteps: [
       { level: "L1", agentId: "a9", agentName: "Meera Das", method: "Email", startedAt: "2026-03-22T08:00:00Z", resolvedAt: "2026-03-22T14:00:00Z", outcome: "Escalated", notes: "Basic network troubleshooting exhausted. Switch configuration requires L2 access." },
       { level: "L2", agentId: "a8", agentName: "Vivek Gupta", method: "Visit", startedAt: "2026-03-23T09:00:00Z", resolvedAt: null, outcome: "In Progress", notes: "On-site visit completed. Identified VLAN misconfiguration on the new switch. Applying fix in maintenance window tonight." },
@@ -455,13 +434,13 @@ export const products: Product[] = [
 // ─── Users ────────────────────────────────────────────────────────────────────
 
 export const users: User[] = [
-  { id: "u1", name: "Jasskaran Singh",  email: "jass@user.io",   password: "user123", avatar: "JS", ticketCount: 2, lastActive: "2026-03-24T08:00:00Z" },
-  { id: "u2", name: "Anita Desai",      email: "anita@user.io",  password: "user123", avatar: "AD", ticketCount: 1, lastActive: "2026-03-22T10:00:00Z" },
-  { id: "u3", name: "Rohan Tiwari",     email: "rohan@user.io",  password: "user123", avatar: "RT", ticketCount: 1, lastActive: "2026-03-18T15:00:00Z" },
-  { id: "u4", name: "Sonal Mehta",      email: "sonal@user.io",  password: "user123", avatar: "SM", ticketCount: 1, lastActive: "2026-03-19T08:00:00Z" },
-  { id: "u5", name: "Deepak Kumar",     email: "deepak@user.io", password: "user123", avatar: "DK", ticketCount: 1, lastActive: "2026-03-24T07:30:00Z" },
-  { id: "u6", name: "Kavya Reddy",      email: "kavya@user.io",  password: "user123", avatar: "KR", ticketCount: 1, lastActive: "2026-03-24T08:00:00Z" },
-  { id: "u7", name: "Farhan Sheikh",    email: "farhan@user.io", password: "user123", avatar: "FS", ticketCount: 1, lastActive: "2026-03-23T09:30:00Z" },
-  { id: "u8", name: "Geeta Pillai",     email: "geeta@user.io",  password: "user123", avatar: "GP", ticketCount: 1, lastActive: "2026-03-15T08:30:00Z" },
+  { id: "u1", name: "Jasskaran Singh", email: "jass@user.io", password: "user123", avatar: "JS", ticketCount: 2, lastActive: "2026-03-24T08:00:00Z" },
+  { id: "u2", name: "Anita Desai", email: "anita@user.io", password: "user123", avatar: "AD", ticketCount: 1, lastActive: "2026-03-22T10:00:00Z" },
+  { id: "u3", name: "Rohan Tiwari", email: "rohan@user.io", password: "user123", avatar: "RT", ticketCount: 1, lastActive: "2026-03-18T15:00:00Z" },
+  { id: "u4", name: "Sonal Mehta", email: "sonal@user.io", password: "user123", avatar: "SM", ticketCount: 1, lastActive: "2026-03-19T08:00:00Z" },
+  { id: "u5", name: "Deepak Kumar", email: "deepak@user.io", password: "user123", avatar: "DK", ticketCount: 1, lastActive: "2026-03-24T07:30:00Z" },
+  { id: "u6", name: "Kavya Reddy", email: "kavya@user.io", password: "user123", avatar: "KR", ticketCount: 1, lastActive: "2026-03-24T08:00:00Z" },
+  { id: "u7", name: "Farhan Sheikh", email: "farhan@user.io", password: "user123", avatar: "FS", ticketCount: 1, lastActive: "2026-03-23T09:30:00Z" },
+  { id: "u8", name: "Geeta Pillai", email: "geeta@user.io", password: "user123", avatar: "GP", ticketCount: 1, lastActive: "2026-03-15T08:30:00Z" },
   { id: "u9", name: "Bhavna Choudhary", email: "bhavna@user.io", password: "user123", avatar: "BC", ticketCount: 1, lastActive: "2026-03-24T09:00:00Z" },
 ];

@@ -12,6 +12,7 @@ export interface CreateAgentPayload {
   supportLevel: number;
 }
 
+
 export interface CreateAgentResult {
   message: string;
   user: {

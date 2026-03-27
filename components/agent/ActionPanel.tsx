@@ -1,7 +1,8 @@
 "use client";
 
+import { toast } from "sonner";
 import { useState } from "react";
-import { ArrowUpCircle, CheckCircle2, Save, Wifi, WifiOff, AlertCircle } from "lucide-react";
+import { ArrowUpCircle, CheckCircle2, Save, Wifi, WifiOff, AlertCircle, ArrowRightCircle, Ticket as TicketIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTicketStore } from "@/stores/ticketStore";
 import { useAgentStore } from "@/stores/agentStore";
@@ -14,15 +15,16 @@ interface ActionPanelProps {
 }
 
 const statusFlow: Record<string, TicketStatus[]> = {
-  "Assigned":        ["In Progress"],
-  "In Progress":     ["Resolved"],
-  "Escalated to L2": ["In Progress", "Resolved"],
-  "Escalated to L3": ["In Progress", "Resolved"],
+  "Assigned": ["In Progress"],
+  "In Progress": ["Resolved", "Forwarded"],
+  "Escalated to L2": ["In Progress", "Resolved", "Forwarded"],
+  "Escalated to L3": ["In Progress", "Resolved", "Forwarded"],
 };
 
 const statusLabel: Record<string, string> = {
   "In Progress": "Mark In Progress",
-  "Resolved":    "Mark Resolved",
+  "Resolved": "Mark Resolved",
+  "Forwarded": "Forward Ticket",
 };
 
 export function ActionPanel({ ticket }: ActionPanelProps) {
@@ -52,10 +54,21 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
     ? findNextLevel(ticket.sector, escalateToLevel as "L2" | "L3")
     : null;
 
-  const handleStatusChange = (status: TicketStatus) => {
-    updateTicketStatus(ticket.id, status);
-    if ((status === "Resolved" || status === "Closed") && ticket.assignedAgentId) {
-      decrementActiveTickets(ticket.assignedAgentId);
+  const handleStatusChange = async (status: TicketStatus) => {
+    try {
+      await updateTicketStatus(ticket.id, status);
+      if ((status === "Resolved" || status === "Closed") && ticket.assignedAgentId) {
+        decrementActiveTickets(ticket.assignedAgentId);
+      }
+
+      if (status === "Resolved") {
+        toast.success("Ticket resolved", { icon: <TicketIcon className="w-4 h-4 text-emerald-500" /> });
+      } else if (status === "Forwarded") {
+        toast.success("Ticket forwarded successfully", { icon: <ArrowRightCircle className="w-4 h-4 text-indigo-500" /> });
+      }
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      toast.error("Failed to update status");
     }
   };
 
@@ -64,6 +77,7 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
     escalateTicket(ticket.id, escalateToLevel as "L2" | "L3", nextAgent, currentAgent.id);
     decrementActiveTickets(currentAgent.id);
     incrementActiveTickets(nextAgent.id);
+    toast.success(`Ticket escalated successfully to ${escalateToLevel}`, { icon: <ArrowUpCircle className="w-4 h-4 text-amber-500" /> });
   };
 
   const handleSaveNote = () => {
@@ -95,15 +109,20 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
               <Button
                 key={s}
                 onClick={() => handleStatusChange(s)}
-                variant={s === "Resolved" ? "default" : "outline"}
+                variant={s === "Resolved" ? "default" : s === "Forwarded" ? "secondary" : "outline"}
                 size="sm"
-                className={`w-full justify-start gap-2 text-sm ${
-                  s === "Resolved"
+                className={`w-full justify-start gap-2 text-sm ${s === "Resolved"
                     ? "bg-emerald-600 hover:bg-emerald-700 text-white border-0"
-                    : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-                }`}
+                    : s === "Forwarded"
+                      ? "bg-indigo-600 hover:bg-indigo-700 text-white border-0"
+                      : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+                  }`}
               >
-                <CheckCircle2 className="w-4 h-4" />
+                {s === "Forwarded" ? (
+                  <ArrowRightCircle className="w-4 h-4" />
+                ) : (
+                  <CheckCircle2 className="w-4 h-4" />
+                )}
                 {statusLabel[s] ?? s}
               </Button>
             ))}
@@ -119,9 +138,9 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
           </p>
           {nextAgent ? (() => {
             const availConfig = {
-              available:   { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", label: "Available",   icon: Wifi,         pulse: true  },
-              at_capacity: { dot: "bg-amber-400",   text: "text-amber-600 dark:text-amber-400",     label: "At Capacity", icon: AlertCircle,  pulse: false },
-              offline:     { dot: "bg-slate-400",   text: "text-slate-500 dark:text-slate-400",     label: "Offline",     icon: WifiOff,      pulse: false },
+              available: { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400", label: "Available", icon: Wifi, pulse: true },
+              at_capacity: { dot: "bg-amber-400", text: "text-amber-600 dark:text-amber-400", label: "At Capacity", icon: AlertCircle, pulse: false },
+              offline: { dot: "bg-slate-400", text: "text-slate-500 dark:text-slate-400", label: "Offline", icon: WifiOff, pulse: false },
             };
             const avail = availConfig[nextAgent.availability];
             const AvailIcon = avail.icon;
@@ -161,9 +180,8 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
                   </div>
                   <div className="h-1.5 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                     <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        pct >= 1 ? "bg-red-500" : pct >= 0.7 ? "bg-amber-400" : "bg-emerald-500"
-                      }`}
+                      className={`h-full rounded-full transition-all duration-500 ${pct >= 1 ? "bg-red-500" : pct >= 0.7 ? "bg-amber-400" : "bg-emerald-500"
+                        }`}
                       style={{ width: `${pct * 100}%` }}
                     />
                   </div>
@@ -205,11 +223,10 @@ export function ActionPanel({ ticket }: ActionPanelProps) {
           disabled={!note.trim()}
           size="sm"
           variant="outline"
-          className={`mt-2 w-full gap-2 text-sm transition-colors ${
-            noteSaved
+          className={`mt-2 w-full gap-2 text-sm transition-colors ${noteSaved
               ? "border-emerald-300 text-emerald-600 dark:border-emerald-700 dark:text-emerald-400"
               : "border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-          }`}
+            }`}
         >
           <Save className="w-3.5 h-3.5" />
           {noteSaved ? "Saved!" : "Save Note"}

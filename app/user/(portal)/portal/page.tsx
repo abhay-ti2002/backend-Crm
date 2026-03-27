@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Inbox } from "lucide-react";
-import { useUserSessionStore } from "@/stores/userSessionStore";
+import { useAuth } from "@/context/AuthContext";
 import { UserShell } from "@/components/user/UserShell";
 import { TicketListPanel } from "@/components/user/TicketListPanel";
 import { NewTicketForm } from "@/components/user/NewTicketForm";
@@ -13,16 +13,28 @@ type RightPanel = "empty" | "new-ticket" | "detail";
 
 export default function UserPortalPage() {
   const router = useRouter();
-  const { currentUserId } = useUserSessionStore();
+  const { user, isAuthenticated, isLoading } = useAuth();
+  const currentUserId = user?.id;
 
   const [rightPanel, setRightPanel] = useState<RightPanel>("empty");
   const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
-    if (!currentUserId) router.replace("/login");
-  }, [currentUserId, router]);
+    if (mounted && !isLoading && !isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [mounted, isLoading, isAuthenticated, router]);
 
-  if (!currentUserId) return null;
+  if (!mounted || isLoading) {
+    return <div className="p-6 text-center text-slate-500">Loading user portal...</div>;
+  }
+
+  if (!isAuthenticated || !currentUserId) return null;
 
   const handleNewTicket = () => {
     setSelectedTicketId(null);
@@ -37,6 +49,8 @@ export default function UserPortalPage() {
   const handleFormSuccess = (newId: string) => {
     setSelectedTicketId(newId);
     setRightPanel("detail");
+    setRefreshKey(prev => prev + 1);
+    alert(`Success! Your ticket has been submitted. (ID: ${newId})`);
   };
 
   const handleFormCancel = () => {
@@ -51,6 +65,7 @@ export default function UserPortalPage() {
         <TicketListPanel
           selectedTicketId={selectedTicketId}
           onSelectTicket={handleSelectTicket}
+          refreshTrigger={refreshKey}
         />
 
         {/* Right: context panel */}

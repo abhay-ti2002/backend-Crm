@@ -3,18 +3,17 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Paperclip, X, Send } from "lucide-react";
-import { useTicketStore } from "@/stores/ticketStore";
-import { useAgentStore } from "@/stores/agentStore";
-import { useUserSessionStore } from "@/stores/userSessionStore";
-import { users, products } from "@/lib/mockData";
+import { api } from "@/lib/api/api";
+import { useAuth } from "@/context/AuthContext";
 import { Sector } from "@/lib/mockData";
 import { cn } from "@/lib/utils";
 
 interface FormValues {
   sector: Sector | "";
-  productName: string;
-  nature: string;
+  title: string;
   description: string;
+  orderId: string;
+  itemId: string;
 }
 
 interface NewTicketFormProps {
@@ -34,56 +33,41 @@ const inputClass = cn(
 const labelClass = "text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider";
 
 export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
-  const { currentUserId } = useUserSessionStore();
-  const { createTicket } = useTicketStore();
-  const { autoAssign } = useAgentStore();
-
   const [attachmentName, setAttachmentName] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const { register, handleSubmit, watch, reset, formState: { errors } } = useForm<FormValues>({
-    defaultValues: { sector: "", productName: "", nature: "", description: "" },
+  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormValues>({
+    defaultValues: { sector: "", title: "", description: "", orderId: "", itemId: "" },
   });
 
-  const selectedSector = watch("sector") as Sector | "";
+  const { user } = useAuth();
 
-  const filteredProducts = selectedSector
-    ? products.filter((p) => p.sector === selectedSector)
-    : products;
-
-  const currentUser = users.find((u) => u.id === currentUserId);
-
-  const onSubmit = (values: FormValues) => {
-    if (!currentUser || !values.sector) return;
+  const onSubmit = async (values: FormValues) => {
+    if (!user || !values.sector) return;
     setSubmitting(true);
 
-    const { tickets } = useTicketStore.getState();
-    // Mirror the ID logic in ticketStore.createTicket so we know the new ticket's ID
-    const newId = `TKT-${String(tickets.length + 1).padStart(3, "0")}`;
+    try {
+      const res = await api("/tickets", {
+        method: "POST",
+        body: JSON.stringify({
+          title: values.title,
+          description: values.description,
+          sector: values.sector,
+          orderId: values.orderId || undefined,
+          itemId: values.itemId || undefined,
+          // attachment isn't supported by backend yet, but can exist in frontend state
+        }),
+      });
 
-    const assignedAgent = autoAssign(values.sector as Sector);
-    const chosenProduct = products.find((p) => p.name === values.productName);
-
-    createTicket(
-      {
-        userId:      currentUser.id,
-        userName:    currentUser.name,
-        userEmail:   currentUser.email,
-        itemId:      chosenProduct?.id ?? "ITM-000",
-        productName: values.productName,
-        nature:      values.nature,
-        description: values.description,
-        attachment:  attachmentName,
-        sector:      values.sector as Sector,
-        priority:    "Medium",
-      },
-      assignedAgent
-    );
-
-    reset();
-    setAttachmentName(null);
-    setSubmitting(false);
-    onSuccess(newId);
+      reset();
+      setAttachmentName(null);
+      setSubmitting(false);
+      onSuccess(res._id || res.id || "new-ticket");
+    } catch (error) {
+      console.error("Failed to create ticket:", error);
+      setSubmitting(false);
+      alert("Failed to create ticket. Please verify orderId and itemId.");
+    }
   };
 
   return (
@@ -124,34 +108,39 @@ export function NewTicketForm({ onSuccess, onCancel }: NewTicketFormProps) {
           )}
         </div>
 
-        {/* Product Name */}
+        {/* Order ID */}
         <div className="space-y-1.5">
-          <label className={labelClass}>Product <span className="text-red-500">*</span></label>
-          <select
-            {...register("productName", { required: true })}
-            className={cn(inputClass, errors.productName && "border-red-400 dark:border-red-500")}
-          >
-            <option value="">Select product…</option>
-            {filteredProducts.map((p) => (
-              <option key={p.id} value={p.name}>{p.name}</option>
-            ))}
-          </select>
-          {errors.productName && (
-            <p className="text-xs text-red-500">Please select a product.</p>
-          )}
-        </div>
-
-        {/* Problem (nature) */}
-        <div className="space-y-1.5">
-          <label className={labelClass}>Problem <span className="text-red-500">*</span></label>
+          <label className={labelClass}>Order ID</label>
           <input
             type="text"
-            placeholder="e.g. Device won't turn on"
-            {...register("nature", { required: true, minLength: 5 })}
-            className={cn(inputClass, errors.nature && "border-red-400 dark:border-red-500")}
+            placeholder="e.g. 69c386cfc144171c00766747"
+            {...register("orderId")}
+            className={inputClass}
           />
-          {errors.nature && (
-            <p className="text-xs text-red-500">Please describe the problem (at least 5 characters).</p>
+        </div>
+
+        {/* Item ID */}
+        <div className="space-y-1.5">
+          <label className={labelClass}>Item ID</label>
+          <input
+            type="text"
+            placeholder="e.g. 69c2632ad01659542dfc3357"
+            {...register("itemId")}
+            className={inputClass}
+          />
+        </div>
+
+        {/* Title */}
+        <div className="space-y-1.5">
+          <label className={labelClass}>Title / Subject <span className="text-red-500">*</span></label>
+          <input
+            type="text"
+            placeholder="e.g. Broken Screen"
+            {...register("title", { required: true, minLength: 5 })}
+            className={cn(inputClass, errors.title && "border-red-400 dark:border-red-500")}
+          />
+          {errors.title && (
+            <p className="text-xs text-red-500">Please provide a title (at least 5 characters).</p>
           )}
         </div>
 

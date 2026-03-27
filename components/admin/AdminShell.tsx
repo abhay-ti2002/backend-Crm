@@ -4,17 +4,19 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
-import { useAdminSessionStore } from "@/stores/adminSessionStore";
+import { useAuth } from "@/context/AuthContext";
 
 export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { isLoggedIn } = useAdminSessionStore();
+  const { isAuthenticated, user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn) router.replace("/login");
-  }, [isLoggedIn, router]);
+    if (!isLoading && (!isAuthenticated || user?.role !== "admin")) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, isLoading, user, router]);
 
-  if (!isLoggedIn) return null;
+  if (isLoading || !isAuthenticated || user?.role !== "admin") return null;
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">

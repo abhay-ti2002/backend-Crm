@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { LayoutGrid, GitBranch, Plus, Wifi, WifiOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,13 +18,14 @@ const AgentOrgChart = dynamic(
   { ssr: false, loading: () => <p className="text-sm text-slate-400 dark:text-slate-500 py-8 text-center">Loading chart…</p> }
 );
 
-const SECTORS: Sector[] = ["IT", "Healthcare", "Education", "Finance"];
+// Real sectors from backend
+const ALL_SECTORS: Sector[] = ["Finance", "IT", "HR", "Operations", "Support"];
 const LEVELS: AgentLevel[] = ["L1", "L2", "L3"];
 
 const levelMeta: Record<AgentLevel, { bg: string; border: string }> = {
-  L1: { bg: "bg-sky-50 dark:bg-sky-500/10",    border: "border-sky-200 dark:border-sky-500/30" },
+  L1: { bg: "bg-sky-50 dark:bg-sky-500/10", border: "border-sky-200 dark:border-sky-500/30" },
   L2: { bg: "bg-violet-50 dark:bg-violet-500/10", border: "border-violet-200 dark:border-violet-500/30" },
-  L3: { bg: "bg-rose-50 dark:bg-rose-500/10",   border: "border-rose-200 dark:border-rose-500/30" },
+  L3: { bg: "bg-rose-50 dark:bg-rose-500/10", border: "border-rose-200 dark:border-rose-500/30" },
 };
 
 const levelAvatarColor: Record<AgentLevel, string> = {
@@ -94,14 +95,22 @@ function ColumnsView({ sector }: { sector: Sector }) {
 }
 
 export default function AgentsPage() {
-  const { selectedSector, viewMode, setSelectedSector, setViewMode, agents } = useAgentStore();
+  const { selectedSector, viewMode, setSelectedSector, setViewMode, agents, fetchAgents } = useAgentStore();
   const [modalOpen, setModalOpen] = useState(false);
-  const displaySector: Sector = selectedSector === "All" ? SECTORS[0] : selectedSector;
 
-  const sectorCounts = SECTORS.reduce<Record<Sector, number>>((acc, s) => {
+  useEffect(() => {
+    fetchAgents();
+  }, [fetchAgents]);
+
+  // Derive sectors that actually have agents from the backend, falling back to all known sectors
+  const activeSectors: Sector[] = ALL_SECTORS.filter((s) => agents.some((a) => a.sector === s));
+  const visibleSectors = activeSectors.length > 0 ? activeSectors : ALL_SECTORS;
+  const displaySector: Sector = selectedSector === "All" ? visibleSectors[0] : (selectedSector as Sector);
+
+  const sectorCounts = visibleSectors.reduce<Record<string, number>>((acc, s) => {
     acc[s] = agents.filter((a) => a.sector === s).length;
     return acc;
-  }, {} as Record<Sector, number>);
+  }, {});
 
   return (
     <div className="space-y-5">
@@ -111,7 +120,7 @@ export default function AgentsPage() {
       <div className="flex items-center gap-3">
         <div className="flex-1">
           <h2 className="font-heading text-base font-semibold text-slate-800 dark:text-slate-100">Agent Hierarchy</h2>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{agents.length} agents across {SECTORS.length} sectors</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{agents.length} agents across {visibleSectors.length} sectors</p>
         </div>
         <Button size="sm" className="gap-1.5 text-xs" onClick={() => setModalOpen(true)}>
           <Plus className="w-3.5 h-3.5" /> Add Agent
@@ -121,13 +130,12 @@ export default function AgentsPage() {
       {/* Sector tabs + View toggle */}
       <div className="flex items-center gap-3">
         <div className="flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1 gap-1">
-          {SECTORS.map((s) => (
+          {visibleSectors.map((s) => (
             <button
               key={s}
               onClick={() => setSelectedSector(s)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${
-                displaySector === s ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
-              }`}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors flex items-center gap-1.5 ${displaySector === s ? "bg-indigo-600 text-white" : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                }`}
             >
               {s}
               <Badge
@@ -143,17 +151,15 @@ export default function AgentsPage() {
         <div className="ml-auto flex bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-1 gap-1">
           <button
             onClick={() => setViewMode("columns")}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
-              viewMode === "columns" ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
-            }`}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${viewMode === "columns" ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              }`}
           >
             <LayoutGrid className="w-3.5 h-3.5" /> Columns
           </button>
           <button
             onClick={() => setViewMode("chart")}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${
-              viewMode === "chart" ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
-            }`}
+            className={`px-3 py-1.5 rounded-md text-xs font-medium flex items-center gap-1.5 transition-colors ${viewMode === "chart" ? "bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-200" : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700/50"
+              }`}
           >
             <GitBranch className="w-3.5 h-3.5" /> Chart
           </button>

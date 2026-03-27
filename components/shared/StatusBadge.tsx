@@ -9,6 +9,7 @@ const statusConfig: Record<TicketStatus, { label: string; dot: string; className
   "Escalated to L3": { label: "Escalated L3",  dot: "bg-red-500",    className: "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/15 dark:text-red-400 dark:border-red-500/25"     },
   "Resolved":        { label: "Resolved",      dot: "bg-green-500",  className: "bg-green-50 text-green-700 border-green-200 dark:bg-green-500/15 dark:text-green-400 dark:border-green-500/25"  },
   "Closed":          { label: "Closed",        dot: "bg-slate-400",  className: "bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-700/50 dark:text-slate-400 dark:border-slate-600/50" },
+  "Forwarded":       { label: "Forwarded",     dot: "bg-violet-500", className: "bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-500/15 dark:text-violet-400 dark:border-violet-500/25" },
 };
 
 export function StatusBadge({ status }: { status: TicketStatus }) {

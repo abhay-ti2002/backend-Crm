@@ -1,20 +1,19 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, {
+    createContext,
+    useContext,
+    useState,
+    useEffect,
+    useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
-import { login as loginApi } from "@/lib/auth";
+import { login as loginApi, User } from "@/lib/auth";
 
 const STORAGE_KEYS = {
     TOKEN: "tickr_token",
     USER: "tickr_user",
 };
-
-interface User {
-    id: string;
-    name?: string;
-    email: string;
-    role: "admin" | "agent" | "customer";
-}
 
 interface AuthContextType {
     user: User | null;
@@ -28,55 +27,59 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const [user, setUser] = useState<User | null>(null);
-    const [token, setToken] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const router = useRouter();
-
-    // Initialization: load from local storage
-    useEffect(() => {
-        // Only run this in the browser
+    const [user, setUser] = useState<User | null>(() => {
         if (typeof window !== "undefined") {
-            const savedToken = localStorage.getItem(STORAGE_KEYS.TOKEN);
-            const savedUser = localStorage.getItem(STORAGE_KEYS.USER);
-
-            if (savedToken && savedUser) {
-                try {
-                    setToken(savedToken);
-                    setUser(JSON.parse(savedUser));
-                } catch (err) {
-                    console.error("Auth initialization failed:", err);
-                    // Clean up corrupted storage
-                    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-                    localStorage.removeItem(STORAGE_KEYS.USER);
-                }
+            const data = localStorage.getItem(STORAGE_KEYS.USER);
+            try {
+                return data ? JSON.parse(data) : null;
+            } catch {
+                return null;
             }
         }
-        setIsLoading(false);
-    }, []);
+        return null;
+    });
 
+    const [token, setToken] = useState<string | null>(() => {
+        if (typeof window !== "undefined") {
+            return localStorage.getItem(STORAGE_KEYS.TOKEN);
+        }
+        return null;
+    });
+
+    const [isLoading, setIsLoading] = useState(false);
+    const router = useRouter();
+
+    // 🔹 Login
     const login = async (credentials: { email: string; password: string }) => {
         setIsLoading(true);
         try {
             const res = await loginApi(credentials);
             const { access_token, user: userData } = res;
 
-            // Update state
+            const normalizedUser = { ...userData, id: userData.id || userData._id };
+
+            // Save state
             setToken(access_token);
-            setUser(userData);
+            setUser(normalizedUser);
 
-            // Persist to storage
+            // Save to localStorage
             localStorage.setItem(STORAGE_KEYS.TOKEN, access_token);
-            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(userData));
+            localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(normalizedUser));
 
-            // Role-based routing (Optimised with a map)
-            const roleRoutes = {
+            // 🔥 Role-based redirect (FINAL FIX)
+            const roleRoutes: Record<string, string> = {
                 admin: "/admin",
-                agent: "/agent/dashboard",
+                agent: "/agent",
                 customer: "/user",
             };
 
-            router.push(roleRoutes[userData.role as keyof typeof roleRoutes] || "/");
+            const role = String(userData.role || "").toLowerCase().trim();
+            const route = roleRoutes[role] || "/";
+
+            console.log(`[Auth] Role: '${role}' → Redirecting to '${route}'`);
+
+            router.replace(route); // ✅ single redirect (clean)
+
         } catch (error) {
             console.error("Login attempt failed:", error);
             throw error;
@@ -85,12 +88,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
     };
 
+    // 🔹 Logout
     const logout = useCallback(() => {
         setToken(null);
         setUser(null);
         localStorage.removeItem(STORAGE_KEYS.TOKEN);
         localStorage.removeItem(STORAGE_KEYS.USER);
-        router.push("/login");
+        router.replace("/login");
     }, [router]);
 
     return (
@@ -109,9 +113,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
 };
 
+// 🔹 Hook
 export const useAuth = () => {
     const context = useContext(AuthContext);
-    if (context === undefined) {
+    if (!context) {
         throw new Error("useAuth must be used within an AuthProvider");
     }
     return context;

@@ -1,6 +1,7 @@
 import { create } from "zustand";
-import { agents as mockAgents, Agent, Sector, AgentLevel } from "@/lib/mockData";
+import { Agent, Sector, AgentLevel } from "@/lib/mockData";
 import { CAPACITY_THRESHOLD, RESUME_THRESHOLD } from "@/lib/constants";
+import { api } from "@/lib/api/api";
 
 type ViewMode = "chart" | "columns";
 
@@ -12,6 +13,7 @@ interface AgentStore {
   viewMode: ViewMode;
   setSelectedSector: (sector: Sector | "All") => void;
   setViewMode: (mode: ViewMode) => void;
+  fetchAgents: () => Promise<void>;
   addAgent: (data: NewAgent) => void;
   agentsBySector: (sector: Sector) => Agent[];
   agentsByLevel: (sector: Sector, level: AgentLevel) => Agent[];
@@ -31,12 +33,41 @@ interface AgentStore {
 }
 
 export const useAgentStore = create<AgentStore>((set, get) => ({
-  agents: mockAgents,
+  agents: [], // default to empty
   selectedSector: "All",
   viewMode: "columns",
 
   setSelectedSector: (sector) => set({ selectedSector: sector }),
   setViewMode: (mode) => set({ viewMode: mode }),
+
+  fetchAgents: async () => {
+    try {
+      const data = await api("/admin/agents", {
+        method: "GET",
+      });
+
+      const mappedAgents: Agent[] = data.map((d: any) => {
+        const initials = d.name ? d.name.split(" ").map((w: string) => w[0]).join("").toUpperCase().slice(0, 2) : "?";
+        return {
+          id: d._id,
+          name: d.name,
+          email: d.email,
+          avatar: initials,
+          level: d.supportLevel === 3 ? "L3" : d.supportLevel === 2 ? "L2" : "L1",
+          sector: d.sector as Sector,
+          supervisorId: null,
+          activeTickets: 0,
+          resolvedTickets: 0,
+          online: false,
+          availability: "offline",
+        };
+      });
+
+      set({ agents: mappedAgents });
+    } catch (err) {
+      console.error("Error fetching agents:", err);
+    }
+  },
 
   addAgent: (data) => {
     const initials = data.name
@@ -55,7 +86,7 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
       supervisorId: null,
       activeTickets: 0,
       resolvedTickets: 0,
-      password:"assword123",
+      password: "assword123",
       online: false,
       availability: "offline",
     };
@@ -100,8 +131,8 @@ export const useAgentStore = create<AgentStore>((set, get) => ({
         const availability = offline
           ? "offline"
           : a.activeTickets >= CAPACITY_THRESHOLD
-          ? "at_capacity"
-          : "available";
+            ? "at_capacity"
+            : "available";
         return { ...a, availability, online: !offline };
       }),
     }));

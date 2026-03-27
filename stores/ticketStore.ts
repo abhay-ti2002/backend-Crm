@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { tickets as mockTickets, Ticket, TicketLabel, TicketPriority, TicketStatus, Sector, AgentLevel, EscalationStep, Agent } from "@/lib/mockData";
+import { getTickets, BackendTicket, updateTicketStatusApi, forwardTicketApi } from "@/lib/api/tickets";
 
 interface TicketFilters {
   label: TicketLabel | "All";
@@ -36,17 +37,72 @@ interface TicketStore {
   starTicket: (id: string) => void;
   trashTicket: (id: string) => void;
   setPriority: (id: string, priority: TicketPriority) => void;
-  assignSector: (id: string, sector: Sector, agentId: string, agentName: string) => void;
+  assignSector: (id: string, sector: Sector, agentId: string, agentName: string, agentEmail: string) => void;
   filteredTickets: () => Ticket[];
   counts: () => Record<string, number>;
   // Agent-facing actions
   // Backend integration: each maps to a dedicated API endpoint (see comments per action)
   createTicket: (data: NewTicketData, assignedAgent: Agent | null) => void;
-  updateTicketStatus: (id: string, status: TicketStatus) => void;
+  updateTicketStatus: (id: string, status: TicketStatus) => Promise<void>;
+  forwardTicket: (id: string) => Promise<void>;
   escalateTicket: (id: string, toLevel: "L2" | "L3", newAgent: Agent, currentAgentId: string) => void;
   addNote: (id: string, note: string) => void;
   acceptPendingTicket: (id: string, agent: Agent) => void;
+  fetchTickets: () => Promise<void>;
 }
+
+const mapStatus = (backendStatus: string): TicketStatus => {
+  switch (backendStatus.toLowerCase()) {
+    case "new": return "Open";
+    case "received": return "In Progress";
+    case "resolved": return "Resolved";
+    case "forwarded": return "Forwarded";
+    case "rejected": return "Closed";
+    case "closed": return "Closed";
+    default: return "Open";
+  }
+};
+
+const mapLabel = (bt: BackendTicket): TicketLabel => {
+  if (bt.status === "new") return "New";
+  if (bt.assignedTo) return "Assigned";
+  return "Unassigned";
+};
+
+const mapBackendTicketToFrontend = (bt: BackendTicket): Ticket => {
+  return {
+    id: bt._id,
+    userId: bt.createdBy?._id || "unknown",
+    userName: bt.createdBy?.name || "Customer",
+    userEmail: bt.createdBy?.email || "",
+    itemId: (bt.itemId as any)?._id || bt.itemId || "N/A",
+    productName: (bt.itemId as any)?.nature || (bt.itemId as any)?.name || "General Product",
+    nature: bt.title,
+    description: bt.description,
+    attachment: null,
+    status: mapStatus(bt.status),
+    priority: "Medium", // Backend should ideally provide this
+    label: mapLabel(bt),
+    starred: false,
+    trashed: false,
+    sector: bt.sector as Sector,
+    assignedAgentId: bt.assignedTo?._id || null,
+    assignedAgentName: bt.assignedTo?.name || null,
+    assignedAgentEmail: bt.assignedTo?.email || null,
+    escalationSteps: bt.history.map(h => ({
+      level: "L1", // Simplified
+      agentId: h.performedBy?._id || h.performedBy || "unknown",
+      agentName: h.performedBy?.name || (h.action?.includes("Customer") ? bt.createdBy?.name : "Agent"),
+      method: "Email",
+      startedAt: h.timestamp,
+      resolvedAt: null,
+      outcome: h.action?.includes("Resolved") ? "Resolved" : "In Progress",
+      notes: h.action
+    })),
+    createdAt: bt.createdAt,
+    updatedAt: bt.updatedAt,
+  };
+};
 
 const defaultFilters: TicketFilters = {
   label: "All",
@@ -59,7 +115,7 @@ const defaultFilters: TicketFilters = {
 };
 
 export const useTicketStore = create<TicketStore>((set, get) => ({
-  tickets: mockTickets,
+  tickets: [],
   filters: defaultFilters,
   selectedTicketId: null,
 
@@ -89,11 +145,11 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       tickets: s.tickets.map((t) => (t.id === id ? { ...t, priority } : t)),
     })),
 
-  assignSector: (id, sector, agentId, agentName) =>
+  assignSector: (id, sector, agentId, agentName, agentEmail) =>
     set((s) => ({
       tickets: s.tickets.map((t) =>
         t.id === id
-          ? { ...t, sector, assignedAgentId: agentId, assignedAgentName: agentName, status: "Assigned", label: "Assigned" }
+          ? { ...t, sector, assignedAgentId: agentId, assignedAgentName: agentName, assignedAgentEmail: agentEmail, status: "Assigned", label: "Assigned" }
           : t
       ),
     })),
@@ -142,15 +198,15 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
 
     const escalationSteps: EscalationStep[] = assignedAgent
       ? [{
-          level: "L1",
-          agentId: assignedAgent.id,
-          agentName: assignedAgent.name,
-          method: "Email",
-          startedAt: now,
-          resolvedAt: null,
-          outcome: "In Progress",
-          notes: "",
-        }]
+        level: "L1",
+        agentId: assignedAgent.id,
+        agentName: assignedAgent.name,
+        method: "Email",
+        startedAt: now,
+        resolvedAt: null,
+        outcome: "In Progress",
+        notes: "",
+      }]
       : [];
 
     const newTicket: Ticket = {
@@ -162,6 +218,7 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
       trashed: false,
       assignedAgentId: assignedAgent?.id ?? null,
       assignedAgentName: assignedAgent?.name ?? null,
+      assignedAgentEmail: assignedAgent?.email ?? null,
       escalationSteps,
       createdAt: now,
       updatedAt: now,
@@ -172,27 +229,44 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
 
   // Updates the status of a ticket and closes/updates the active escalation step.
   // Backend integration: PATCH /api/tickets/:id/status
-  updateTicketStatus: (id, status) => {
-    const isTerminal = status === "Resolved" || status === "Closed";
-    set((s) => ({
-      tickets: s.tickets.map((t) => {
-        if (t.id !== id) return t;
-        return {
-          ...t,
-          status,
-          updatedAt: new Date().toISOString(),
-          escalationSteps: t.escalationSteps.map((step, idx) =>
-            idx === t.escalationSteps.length - 1
-              ? {
-                  ...step,
-                  outcome: isTerminal ? "Resolved" : "In Progress",
-                  resolvedAt: isTerminal ? new Date().toISOString() : step.resolvedAt,
-                }
-              : step
-          ),
-        };
-      }),
-    }));
+  updateTicketStatus: async (id, status) => {
+    try {
+      // Mapping frontend status to backend expected strings
+      const backendStatusMap: Record<string, string> = {
+        "Open": "new",
+        "In Progress": "received",
+        "Resolved": "resolved",
+        "Forwarded": "forwarded",
+        "Closed": "closed"
+      };
+
+      const backendStatus = backendStatusMap[status] || status.toLowerCase();
+      const updatedBackendTicket = await updateTicketStatusApi(id, backendStatus);
+      const updatedTicket = mapBackendTicketToFrontend(updatedBackendTicket);
+
+      set((s) => ({
+        tickets: s.tickets.map((t) => (t.id === id ? updatedTicket : t)),
+      }));
+    } catch (error) {
+      console.error("Failed to update ticket status:", error);
+      throw error;
+    }
+  },
+
+  // Forwards a ticket (escalates to next level)
+  // Backend integration: PATCH /api/tickets/:id/forward
+  forwardTicket: async (id) => {
+    try {
+      const updatedBackendTicket = await forwardTicketApi(id);
+      const updatedTicket = mapBackendTicketToFrontend(updatedBackendTicket);
+
+      set((s) => ({
+        tickets: s.tickets.map((t) => (t.id === id ? updatedTicket : t)),
+      }));
+    } catch (error) {
+      console.error("Failed to forward ticket:", error);
+      throw error;
+    }
   },
 
   // Escalates a ticket to the next level agent.
@@ -227,6 +301,7 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
           status: newStatus,
           assignedAgentId: newAgent.id,
           assignedAgentName: newAgent.name,
+          assignedAgentEmail: newAgent.email,
           label: "Assigned" as const,
           escalationSteps: updatedSteps,
           updatedAt: now,
@@ -265,6 +340,7 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
           label: "Assigned" as const,
           assignedAgentId: agent.id,
           assignedAgentName: agent.name,
+          assignedAgentEmail: agent.email,
           updatedAt: now,
           escalationSteps: [
             ...t.escalationSteps,
@@ -282,5 +358,15 @@ export const useTicketStore = create<TicketStore>((set, get) => ({
         };
       }),
     }));
+  },
+
+  fetchTickets: async () => {
+    try {
+      const backendTickets = await getTickets();
+      const mapped = backendTickets.map(mapBackendTicketToFrontend);
+      set({ tickets: mapped });
+    } catch (error) {
+      console.error("[TicketStore] Error fetching tickets:", error);
+    }
   },
 }));

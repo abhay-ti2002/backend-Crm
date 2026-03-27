@@ -35,14 +35,18 @@ const labelItems = [
   { key: "Trashed",    label: "Trashed",      Icon: Trash2 },
 ] as const;
 
-const COLS = "grid-cols-[7rem_1fr_6.5rem_9rem_6rem_4rem_5rem]";
+const COLS = "grid-cols-[6.5rem_1fr_16rem_6.5rem_9rem_6.5rem_4.5rem_2.5rem]";
 
 const TH = "py-2.5 px-3 text-[11px] font-semibold uppercase tracking-wide text-slate-400 dark:text-slate-500";
 
 function TicketsContent() {
   const searchParams = useSearchParams();
-  const { filters, setFilter, resetFilters, filteredTickets, starTicket, trashTicket, setPriority } = useTicketStore();
+  const { filters, setFilter, resetFilters, filteredTickets, starTicket, trashTicket, setPriority, fetchTickets } = useTicketStore();
   const allTickets = useTicketStore((s) => s.tickets);
+
+  useEffect(() => {
+    fetchTickets();
+  }, [fetchTickets]);
   const c = {
     total:      allTickets.filter((t) => !t.trashed).length,
     new:        allTickets.filter((t) => t.label === "New"        && !t.trashed).length,
@@ -200,6 +204,7 @@ function TicketsContent() {
               <div className={`grid ${COLS} border-b border-slate-100 dark:border-slate-700/60 bg-slate-50 dark:bg-slate-800/60 shrink-0`}>
                 <div className={TH}>ID</div>
                 <div className={TH}>Nature / User</div>
+                <div className={TH}>Agent</div>
                 <div className={TH}>Priority</div>
                 <div className={TH}>Status</div>
                 <div className={TH}>Sector</div>
@@ -212,16 +217,16 @@ function TicketsContent() {
                 {tickets.map((t) => (
                   <div
                     key={t.id}
-                    className={`grid ${COLS} border-b border-slate-100 dark:border-slate-700/50 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors duration-100 group/row`}
+                    className={`grid ${COLS} border-b border-slate-100 dark:border-slate-700/50 last:border-b-0 hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors duration-100 group/row min-h-[5.5rem]`}
                   >
                     {/* ID */}
-                    <div className="py-2.5 px-3 flex items-center gap-1.5 min-w-0">
+                    <div className="py-4 px-3 flex items-center gap-1.5 min-w-0">
                       <span className="font-mono text-xs text-slate-500 dark:text-slate-400 truncate">{t.id}</span>
                       {t.attachment && <Paperclip className="w-3 h-3 cursor-pointer text-slate-300 dark:text-slate-600 shrink-0" />}
                     </div>
 
                     {/* Nature / User */}
-                    <div className="py-2.5 px-3 flex items-center gap-2 min-w-0">
+                    <div className="py-4 px-3 flex items-center gap-2 min-w-0">
                       {t.starred && <Star className="w-3 h-3 text-amber-400 shrink-0" fill="currentColor" />}
                       <div className="min-w-0">
                         <p className="text-sm font-medium text-slate-700 dark:text-slate-200 truncate leading-tight">{t.nature}</p>
@@ -232,17 +237,38 @@ function TicketsContent() {
                     </div>
 
                     {/* Priority */}
-                    <div className="py-2.5 px-3 flex items-center">
+                    <div className="py-4 px-3 flex items-center">
                       <PriorityBadge priority={t.priority} />
                     </div>
 
                     {/* Status */}
-                    <div className="py-2.5 px-3 flex items-center">
+                    <div className="py-4 px-3 flex items-center">
                       <StatusBadge status={t.status} />
                     </div>
 
+                    {/* Agent */}
+                    <div className="py-4 px-3 flex items-center min-w-0">
+                      {t.assignedAgentName ? (
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-500/10 flex items-center justify-center text-[12px] font-bold text-indigo-500 dark:text-indigo-400 shrink-0 border border-indigo-100 dark:border-indigo-500/20 shadow-sm">
+                            {t.assignedAgentName.charAt(0)}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <span className="text-xs text-slate-800 dark:text-slate-100 font-bold leading-tight break-all">
+                              {t.assignedAgentName}
+                            </span>
+                            <span className="text-[10px] text-slate-400 dark:text-slate-500 mt-1 font-medium break-all">
+                              {t.assignedAgentEmail}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400 dark:text-slate-500 italic">Unassigned</span>
+                      )}
+                    </div>
+
                     {/* Sector */}
-                    <div className="py-2.5 px-3 flex items-center">
+                    <div className="py-4 px-3 flex items-center">
                       {t.sector ? (
                         <Badge variant="outline" className={`text-xs font-medium ${sectorClass[t.sector] ?? "text-slate-600 border-slate-200"}`}>
                           {t.sector}
@@ -253,14 +279,14 @@ function TicketsContent() {
                     </div>
 
                     {/* Date */}
-                    <div className="py-2.5 px-3 flex items-center">
+                    <div className="py-4 px-3 flex items-center">
                       <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">
                         {format(new Date(t.createdAt), "MMM d")}
                       </span>
                     </div>
 
                     {/* Actions */}
-                    <div className="py-2.5 px-3 flex items-center">
+                    <div className="py-4 px-3 flex items-center">
                       <div className="flex items-center gap-1 opacity-0 group-hover/row:opacity-100 transition-opacity duration-150">
                         <Link href={`/admin/tickets/${t.id}`}>
                           <Button variant="ghost" size="icon" className="w-7 h-7 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">
