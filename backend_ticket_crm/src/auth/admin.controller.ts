@@ -28,6 +28,12 @@ export class AdminController {
         return this.authService.createAgent(data);
     }
 
+    @Get('agents')
+    @CheckAbility({ action: 'read', subject: User })
+    async getAgents() {
+        return this.authService.getAgents();
+    }
+
     @Get('performance')
     @CheckAbility({ action: 'read', subject: 'all' })
     async getPerformance() {

@@ -34,6 +34,14 @@ export class CaslGuard implements CanActivate {
     const subject = this.detectSubject(request, rules);
 
     const hasAccess = rules.every((rule) => {
+      // If we have a concrete instance (from body or params), we must tell CASL what type it is
+      // so it can match against rules defined for that Class.
+      if (subject && typeof subject === 'object' && typeof rule.subject === 'function' && !(subject instanceof (rule.subject as any))) {
+        // Create a "fake" instance or hint the type
+        const subjectWithContext = Object.assign(Object.create((rule.subject as any).prototype), subject);
+        return ability.can(rule.action, subjectWithContext);
+      }
+      
       return ability.can(rule.action, subject ?? rule.subject);
     });
 

@@ -31,12 +31,11 @@ async function seed() {
 
         const adminEmail = 'admin@crm.io';
         const adminPassword = 'admin123';
-        const hashedPassword = await bcrypt.hash(adminPassword, 10);
 
         const adminEntry = {
             name: 'admin',
             email: adminEmail,
-            password: hashedPassword,
+            password: adminPassword,
             role: 'admin',
             supportLevel: 3, // Highest level for admin
         };
@@ -44,7 +43,7 @@ async function seed() {
         const existing = await User.findOne({ email: adminEmail });
         if (existing) {
             console.log('⚠️ Admin with this email already exists. Updating password...');
-            existing.password = hashedPassword;
+            existing.password = adminPassword;
             await existing.save();
             console.log('✅ Password updated!');
         } else {

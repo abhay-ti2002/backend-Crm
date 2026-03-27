@@ -29,8 +29,8 @@ async function seed() {
         console.log('Connected!');
 
         const User = mongoose.model('User', UserSchema);
-        const password = 'agent123';
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const plainPassword = 'password123';
+        const hashedPassword = await bcrypt.hash(plainPassword, 10);
 
         // Add specific agent karan@crm.io
         const karanEmail = 'karan@crm.io';
@@ -53,8 +53,8 @@ async function seed() {
         for (const sector of sectors) {
             console.log(`\n--- Seeding sector: ${sector} ---`);
 
-            // Seed 2 agents for L1 and 2 for L2
-            for (let level = 1; level <= 2; level++) {
+            // Seed 2 agents for L1, L2 and L3
+            for (let level = 1; level <= 3; level++) {
                 for (let i = 1; i <= 2; i++) {
                     const name = `${sector}_Agent_${level}_${i}`;
                     const email = `${sector.toLowerCase()}_agent${i}_l${level}@example.com`;
@@ -80,7 +80,7 @@ async function seed() {
         }
 
         console.log(`\n Successfully seeded ${count} new agents!`);
-        console.log(`Password for all: ${password}`);
+        console.log(`Password for all: ${plainPassword}`);
 
     } catch (error) {
         console.error(' Seeding failed:', error);

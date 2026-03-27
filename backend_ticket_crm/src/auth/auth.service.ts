@@ -93,6 +93,11 @@ export class AuthService {
     };
   }
 
+  // Get All Agents
+  async getAgents() {
+    return this.userModel.find({ role: UserRole.AGENT }).select('-password').exec();
+  }
+
   //  JWT Token
   private generateToken(user: UserDocument) {
     const payload = {
@@ -106,7 +111,9 @@ export class AuthService {
       user: {
         id: user._id.toString(),
         email: user.email,
+        name: user.name,
         role: user.role,
+        sector: user.sector,
       },
     };
   }

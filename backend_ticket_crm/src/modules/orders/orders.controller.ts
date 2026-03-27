@@ -56,6 +56,7 @@ export class OrdersController {
   @Get('my')
   @CheckAbility({ action: 'browse', subject: Order })
   getMyOrders(@Req() req) {
-    return this.ordersService.findByCustomer(req.user._id);
+    const userId = req.user?.id || req.user?._id;
+    return this.ordersService.findByCustomer(userId);
   }
 }

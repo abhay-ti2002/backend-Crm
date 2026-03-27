@@ -26,18 +26,21 @@ export class CaslAbilityFactory {
             can('browse', Product);
             can('read', Product);
             can('browse', Order);
-            can('read', Order); 
+            can('read', Order);
             can('update', Item);
         } else if (user.role === UserRole.CUSTOMER) {
-          
             can('add', Ticket);
             can('read', Ticket, { createdBy: user._id });
+            can('browse', Ticket); // Add browse permission for the collection
+            can('add', Order);
+            can('create', Order);
             can('browse', Order, { customerId: user._id });
             can('read', Order, { customerId: user._id });
             can('read', Item, { ownerId: user._id });
             can('browse', Product);
             can('read', Product);
             can('create', Ticket);
+            can('update', Order);
         }
 
         return build({

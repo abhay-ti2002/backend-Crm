@@ -68,6 +68,11 @@ export class TicketsService {
             timestamp: new Date(),
         } as any);
 
+        if (status === TicketStatus.FORWARDED) {
+            ticket.level = Math.min(ticket.level + 1, 2);
+            await this.assignTicket(ticket as any);
+        }
+
         const savedTicket = await ticket.save();
 
         if (status === TicketStatus.RESOLVED) {
@@ -79,7 +84,11 @@ export class TicketsService {
             );
         }
 
-        return savedTicket as any;
+        return (await this.ticketModel.findById(savedTicket._id)
+            .populate('createdBy', 'name email')
+            .populate('assignedTo', 'name email')
+            .populate('history.performedBy', 'name email')
+            .exec())!;
     }
 
     async forwardTicket(id: string, userId: string): Promise<Ticket> {
@@ -184,6 +193,7 @@ export class TicketsService {
         const ticket = await this.ticketModel.findById(id)
             .populate('createdBy', 'name email')
             .populate('assignedTo', 'name email')
+            .populate('history.performedBy', 'name email')
             .populate('orderId')
             .populate('itemId')
             .exec();
@@ -227,6 +237,7 @@ export class TicketsService {
                 return await this.ticketModel.find(query)
                     .populate('createdBy', 'name email')
                     .populate('assignedTo', 'name email')
+                    .populate('history.performedBy', 'name email')
                     .populate('orderId')
                     .populate('itemId')
                     .exec();
